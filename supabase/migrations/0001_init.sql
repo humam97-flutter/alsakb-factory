@@ -359,3 +359,11 @@ left join lateral (
          sum(amount) filter (where kind = 'advance') as advance, sum(amount) filter (where kind = 'salary') as salary
   from worker_payments where worker_id = w.id and date_trunc('month', day) = mo.month
 ) p on true;
+
+-- ---------- صلاحيات الوصول عبر الـ API ----------
+-- المستخدم المسجل فقط؛ الـ RLS أعلاه يحدد ما يراه كل دور
+revoke all on all tables in schema public from anon;
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on all tables in schema public to authenticated;
+grant usage, select on all sequences in schema public to authenticated;
+grant execute on function current_role_name(), has_role(app_role[]) to authenticated;
