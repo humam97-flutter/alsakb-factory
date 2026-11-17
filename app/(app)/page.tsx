@@ -9,7 +9,7 @@ export default async function Dashboard({ searchParams }: PageProps) {
   const me = await getMe();
   const db = await supabase();
   const t = today();
-  const [{ data: orders }, { data: machines }, { data: materials }, { data: maint }, att, fin, docs] = await Promise.all([
+  const [{ data: orders }, { data: machines }, { data: materials }, { data: maint }, att, fin, docs, reqs, sup] = await Promise.all([
     db.from("work_orders").select("id, no, product, client, status, due_date").not("status", "in", "(delivered,cancelled)"),
     db.from("machines").select("id, code, name, status, next_service"),
     db.from("materials").select("id, name, qty, min_qty, unit, unit_price, currency"),
@@ -20,7 +20,10 @@ export default async function Dashboard({ searchParams }: PageProps) {
       ? db.from("documents").select("status, due_date, expires_on").neq("status", "archived")
           .or(`status.eq.pending,expires_on.lte.${addDays(t, 30)}`)
       : Promise.resolve({ data: null }),
+    can.finance(me.role) ? db.from("purchase_requests").select("id").eq("status", "pending") : Promise.resolve({ data: null }),
+    can.finance(me.role) ? db.from("supplier_balances").select("balance, currency") : Promise.resolve({ data: null }),
   ]);
+  const oweIqd = (sup.data ?? []).filter((x) => x.currency === "IQD").reduce((a, x) => a + Math.max(0, Number(x.balance)), 0);
   const docsPending = (docs.data ?? []).filter((d) => d.status === "pending").length;
   const docsExpiring = (docs.data ?? []).filter((d) => d.expires_on && d.expires_on <= addDays(t, 30)).length;
   const o = orders ?? [];
@@ -55,6 +58,8 @@ export default async function Dashboard({ searchParams }: PageProps) {
         {docs.data && kpi(docsPending, "كتب بانتظار إجراء", "/documents?status=pending", docsPending ? "tone-warn" : "")}
         {docs.data && docsExpiring > 0 && kpi(docsExpiring, "عقود ومستندات تنتهي خلال شهر", "/documents", "tone-bad")}
         {fin.data && debtUsd > 0 && kpi(money(debtUsd, "USD"), "ديون بالدولار", "/sales/customers?debt=1", "tone-warn")}
+        {reqs.data && kpi(reqs.data.length, "طلبات شراء تنتظر موافقتك", "/purchases/requests", reqs.data.length ? "tone-warn" : "")}
+        {sup.data && oweIqd > 0 && kpi(money(oweIqd), "علينا للموردين", "/purchases/suppliers", "")}
         {kpi(dueSoon.length, "تسليم خلال 3 أيام", "/orders", dueSoon.length ? "tone-warn" : "")}
       </div>
 

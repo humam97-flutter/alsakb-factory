@@ -126,3 +126,10 @@ export const QUOTE_STATUS: Record<string, Opt> = {
 
 export const PAY_METHOD: Record<string, string> = { cash: "نقد", transfer: "حوالة", cheque: "صك" };
 export const LINE_UNITS = ["قطعة", "كغم", "طن", "متر", "م²", "ساعة", "مقطوعة"];
+
+export const REQUEST_STATUS: Record<string, Opt> = {
+  pending: { label: "بانتظار الموافقة", tone: "warn" },
+  approved: { label: "موافق عليه", tone: "info" },
+  rejected: { label: "مرفوض", tone: "bad" },
+  bought: { label: "تم الشراء", tone: "ok" },
+};

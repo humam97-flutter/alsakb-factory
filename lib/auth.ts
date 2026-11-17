@@ -24,6 +24,7 @@ export const can = {
   stages: (r: Role) => r === "manager" || r === "production" || r === "operator",
   users: (r: Role) => r === "manager",
   docs: (r: Role) => r === "manager" || r === "accountant",
+  requests: (r: Role) => r !== "operator",
 };
 
 export async function requireRole(check: (r: Role) => boolean) {
