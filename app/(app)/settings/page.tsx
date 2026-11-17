@@ -23,6 +23,11 @@ export default async function SettingsPage({ searchParams }: PageProps) {
         </div>
         <div className="actions"><button className="btn" type="submit">حفظ</button></div>
       </form>
+      <h3 className="sec">النسخ الاحتياطي</h3>
+      <div className="panel">
+        <p style={{ marginTop: 0 }}>نسخة يومية تلقائية لقاعدة البيانات تنحفظ بـ GitHub لمدة 90 يوم (تفاصيل التفعيل بملف README).</p>
+        <a className="btn ghost" href="/export/backup">تنزيل نسخة كاملة الآن (JSON)</a>
+      </div>
     </>
   );
 }
