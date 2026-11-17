@@ -133,3 +133,6 @@ export const REQUEST_STATUS: Record<string, Opt> = {
   rejected: { label: "مرفوض", tone: "bad" },
   bought: { label: "تم الشراء", tone: "ok" },
 };
+
+export const EXPENSE_CATEGORIES = ["إيجار", "كهرباء وطنية", "مولدة ووقود", "غاز وأوكسجين", "نقل وتحميل", "ضيافة", "صيانة مبنى", "رواتب إدارية", "ضرائب ورسوم", "اتصالات وإنترنت", "أخرى"];
+export const CASH_KIND: Record<string, string> = { opening: "رصيد افتتاحي", deposit: "إيداع", withdraw: "سحب", exchange: "تصريف عملة" };
