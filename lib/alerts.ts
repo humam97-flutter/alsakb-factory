@@ -71,5 +71,20 @@ export const getAlerts = cache(async (me: Me): Promise<AlertItem[]> => {
       out.push({ level: i.due_date! < t ? "bad" : "warn", group: "تسديد الموردين", text: `${s.name} #${i.no}: ${money(bal.get(i.id), i.currency)} موعده ${i.due_date}`, href: `/purchases/invoices/${i.id}` });
     }
   }
+  // قص هدره عالي خلال آخر 7 أيام
+  if (can.production(r)) {
+    const [{ data: cs }, { data: st }] = await Promise.all([
+      db.from("cut_plans").select("id, plate_kg, scrap_kg, loss_value, order:work_orders(no)").eq("status", "done").gte("done_at", addDays(t, -7)),
+      db.from("settings").select("loss_alert_pct").eq("id", 1).maybeSingle(),
+    ]);
+    const lim = Number(st?.loss_alert_pct ?? 20);
+    for (const c of cs ?? []) {
+      const waste = Number(c.plate_kg) ? (Number(c.scrap_kg) / Number(c.plate_kg)) * 100 : 0;
+      if (waste > lim) {
+        const o = c.order as unknown as { no: number };
+        out.push({ level: "warn", group: "القص", text: `أمر #${o?.no}: هدر ${waste.toFixed(0)}% بلوح واحد (${money(c.loss_value)})`, href: `/cutting/plans/${c.id}` });
+      }
+    }
+  }
   return out.sort((a, b) => (a.level === b.level ? 0 : a.level === "bad" ? -1 : 1));
 });

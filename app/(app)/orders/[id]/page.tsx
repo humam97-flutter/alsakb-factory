@@ -9,6 +9,7 @@ import { invoiceFrom } from "../../sales/actions";
 import { setStageWork } from "../../production/actions";
 import { OrderFiles } from "./files";
 import { OrderQuality } from "./quality";
+import { OrderCutting } from "./cutting";
 import { waLink } from "@/lib/share";
 
 export default async function OrderPage({ params, searchParams }: IdPageProps) {
@@ -24,6 +25,8 @@ export default async function OrderPage({ params, searchParams }: IdPageProps) {
     db.from("machines").select("id, code, name"),
     db.from("workers").select("id, full_name").eq("active", true).order("full_name"),
   ]);
+  const { data: cuts } = await db.from("cut_plans").select("material_cost").eq("order_id", id).eq("status", "done");
+  const plateCost = (cuts ?? []).reduce((a, c) => a + Number(c.material_cost), 0);
   const wName = new Map((workers ?? []).map((w) => [w.id, w.full_name]));
   if (!o) notFound();
   const mName = new Map((machines ?? []).map((m) => [m.id, m.name]));
@@ -175,6 +178,8 @@ export default async function OrderPage({ params, searchParams }: IdPageProps) {
         )}
       </div>
 
+      <OrderCutting orderId={o.id} role={me.role} />
+
       <OrderQuality orderId={o.id} role={me.role} machines={machines ?? []} />
 
       <h3 className="sec">المواد المصروفة</h3>
@@ -217,7 +222,9 @@ export default async function OrderPage({ params, searchParams }: IdPageProps) {
             <div className="tbl">
               <table>
                 <tbody>
-                  <tr><td>مواد مصروفة من المخزن</td><td className="n num">{money(cost.cost_material, cur)}</td></tr>
+                  <tr><td>مواد مصروفة من المخزن</td><td className="n num">{money(Number(cost.cost_material) - plateCost, cur)}</td></tr>
+                  {plateCost > 0 && <tr><td>ألواح مقصوصة (ناقص البقايا وبيع السكراب)</td><td className="n num">{money(plateCost, cur)}</td></tr>}
+                  {Number(cost.cut_loss) > 0 && <tr><td className="meta">منها خسارة هدر القص</td><td className="n num meta">{money(cost.cut_loss, cur)}</td></tr>}
                   <tr><td>أجور العمال</td><td className="n num">{money(cost.cost_labor, cur)}</td></tr>
                   <tr><td>ساعات المكائن × كلفة الساعة</td><td className="n num">{money(cost.cost_machine_hours, cur)}</td></tr>
                   <tr><td>كهرباء وتشغيل (يدوي)</td><td className="n num">{money(cost.cost_machine, cur)}</td></tr>

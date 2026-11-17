@@ -229,6 +229,7 @@ ol.stages { list-style: none; padding: 0; margin: 0; }
 .hbar .r { display: grid; grid-template-columns: 110px 1fr auto; align-items: center; gap: 10px; font-size: 13px; }
 .hbar .track { height: 10px; border-radius: 5px; background: var(--chip); overflow: hidden; display: flex; }
 .hbar .fill { height: 100%; border-radius: 5px; }
+bdi.ltr { direction: ltr; unicode-bidi: isolate; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--muted); margin-top: 10px; }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-inline-end: 5px; vertical-align: -1px; }
 .stack { height: 14px; border-radius: 7px; overflow: hidden; display: flex; gap: 2px; background: var(--panel); }
@@ -270,3 +271,28 @@ img.mark { border-radius: 9px; object-fit: contain; background: #fff; flex: none
 @keyframes sk { to { background-position: -200% 0; } }
 .back { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); text-decoration: none; }
 .back:hover { color: var(--ink); }
+
+/* مخططات القص */
+:root { --nest-0: #2f6fb0; --nest-1: #c47d0e; --nest-2: #6b4fb3; --nest-3: #1d8a7a; --nest-4: #b0466b; --nest-5: #5d7a2a; }
+@media (prefers-color-scheme: dark) { :root { --nest-0: #5d9de0; --nest-1: #e3a23e; --nest-2: #9c84e0; --nest-3: #3dbba8; --nest-4: #e07399; --nest-5: #93b553; } }
+.nest { display: block; width: 100%; height: auto; direction: ltr; }
+.nest-plate { fill: var(--chip); stroke: var(--muted); stroke-width: .15%; vector-effect: non-scaling-stroke; }
+.nest-edge { fill: none; stroke: var(--line); stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
+.nest-part { fill: color-mix(in srgb, var(--c) 22%, var(--panel)); stroke: var(--c); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.nest-hole { fill: var(--chip); stroke: var(--c); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.nest-rem { stroke: var(--ok); stroke-width: 1; stroke-dasharray: 5 3; vector-effect: non-scaling-stroke; }
+.nest-t { fill: var(--ink); font-family: var(--f-body); }
+.nest-t.rem { fill: var(--ok); font-weight: 600; }
+.nest-dim { fill: var(--muted); font-family: var(--f-num); }
+.nest-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; box-shadow: var(--shadow); margin-bottom: 14px; }
+.nest-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-bottom: 10px; }
+.nest-head h3 { margin: 0; font-size: 15px; font-family: var(--f-display); }
+.nest-stats { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); margin-top: 10px; }
+.nest-stats b { direction: ltr; unicode-bidi: isolate; color: var(--ink); font-family: var(--f-num); font-weight: 500; }
+.ybar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--chip); gap: 2px; min-width: 120px; }
+.ybar span { display: block; height: 100%; }
+.y-parts { background: var(--primary); } .y-rem { background: var(--ok); } .y-scrap { background: var(--bad); }
+bdi.ltr { direction: ltr; unicode-bidi: isolate; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-inline-end: 5px; vertical-align: -1px; }
+@media print { .nest-card { break-inside: avoid; box-shadow: none; } }

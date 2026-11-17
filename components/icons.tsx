@@ -24,6 +24,7 @@ const P: Record<string, React.ReactNode> = {
   clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
   check: <><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></>,
   money: <><rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /><path d="M6 12h.01M18 12h.01" /></>,
+  cut: <><circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><path d="M8.1 8.1 20 20M8.1 15.9 20 4" /></>,
   sort: <><path d="m7 15 5 5 5-5M7 9l5-5 5 5" /></>,
 };
 
