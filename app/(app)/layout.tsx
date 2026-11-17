@@ -1,5 +1,8 @@
-import { Nav } from "@/components/nav";
 import Link from "next/link";
+import { Suspense } from "react";
+import { Enhance } from "@/components/enhance";
+import { Icon } from "@/components/icons";
+import { PageTitle, Sidebar, type NavGroup } from "@/components/nav";
 import { getAlerts } from "@/lib/alerts";
 import { can, getMe } from "@/lib/auth";
 import { ROLE } from "@/lib/labels";
@@ -10,46 +13,82 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const r = me.role;
   const alerts = await getAlerts(me);
   const bad = alerts.filter((a) => a.level === "bad").length;
-  const items = [
-    { href: "/", label: "اللوحة" },
-    { href: "/orders", label: "أوامر العمل" },
-    { href: "/stock", label: "المخزن" },
-    { href: "/machines", label: "المكائن" },
-    { href: "/maintenance", label: "الصيانة" },
-    { href: "/production", label: "الإنتاج" },
-    ...(can.attendance(r) ? [{ href: "/workers", label: "العمال" }] : []),
-    ...(can.finance(r) ? [{ href: "/sales", label: "المبيعات" }] : []),
-    ...(can.requests(r) ? [{ href: "/purchases", label: "المشتريات" }] : []),
-    ...(can.finance(r) ? [{ href: "/payroll", label: "الرواتب" }] : []),
-    ...(can.finance(r) ? [{ href: "/accounts", label: "الحسابات" }] : []),
-    ...(can.docs(r) ? [{ href: "/documents", label: "المستندات" }] : []),
-    { href: "/tools/weight", label: "حاسبة الوزن" },
-    ...(can.users(r) ? [{ href: "/users", label: "المستخدمون" }] : []),
-    ...(can.users(r) ? [{ href: "/audit", label: "سجل التعديلات" }] : []),
-    ...(can.users(r) ? [{ href: "/settings", label: "الإعدادات" }] : []),
-  ];
+  const groups: NavGroup[] = [
+    { items: [{ href: "/", label: "اللوحة الرئيسية", icon: "home" }] },
+    {
+      title: "التشغيل",
+      items: [
+        { href: "/orders", label: "أوامر العمل", icon: "orders" },
+        { href: "/production", label: "الإنتاج", icon: "factory" },
+        { href: "/machines", label: "المكائن", icon: "machine" },
+        { href: "/maintenance", label: "الصيانة", icon: "wrench" },
+        { href: "/stock", label: "المخزن", icon: "stock" },
+        ...(can.attendance(r) ? [{ href: "/workers", label: "العمال", icon: "workers" }] : []),
+      ],
+    },
+    {
+      title: "المالية",
+      items: [
+        ...(can.finance(r) ? [{ href: "/sales", label: "المبيعات", icon: "sales" }] : []),
+        ...(can.requests(r) ? [{ href: "/purchases", label: "المشتريات", icon: "cart" }] : []),
+        ...(can.finance(r) ? [{ href: "/payroll", label: "الرواتب", icon: "money" }] : []),
+        ...(can.finance(r) ? [{ href: "/accounts", label: "الحسابات", icon: "wallet" }] : []),
+      ],
+    },
+    {
+      title: "الإدارة",
+      items: [
+        ...(can.docs(r) ? [{ href: "/documents", label: "المستندات", icon: "docs" }] : []),
+        { href: "/tools/weight", label: "حاسبة الوزن", icon: "scale" },
+        ...(can.users(r) ? [{ href: "/users", label: "المستخدمون", icon: "users" }] : []),
+        ...(can.users(r) ? [{ href: "/audit", label: "سجل التعديلات", icon: "history" }] : []),
+        ...(can.users(r) ? [{ href: "/settings", label: "الإعدادات", icon: "settings" }] : []),
+      ],
+    },
+  ].filter((g) => g.items.length);
+  const initials = me.full_name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("");
+
   return (
-    <>
-      <header className="top">
-        <div className="wrap">
-          <div className="brand">
-            <div className="logo" aria-hidden="true" />
-            <h1>معمل السكب الحديدي</h1>
-            <Link href="/alerts" className={`bell ${bad ? "has-bad" : alerts.length ? "has" : ""}`} aria-label={`التنبيهات: ${alerts.length}`}>
-              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg>
-              {alerts.length > 0 && <span className="num">{alerts.length}</span>}
-            </Link>
-            <div className="who">
-              {me.full_name} · {ROLE[r]}
-              <form action={signOut}>
-                <button type="submit">خروج</button>
-              </form>
-            </div>
+    <div className="shell">
+      <Sidebar
+        groups={groups}
+        brand={
+          <Link href="/" className="brand-link">
+            <span className="logo" aria-hidden="true" />
+            <span>
+              <b>معمل السكب الحديدي</b>
+              <small>نظام إدارة المعمل</small>
+            </span>
+          </Link>
+        }
+        footer={
+          <div className="me">
+            <span className="avatar" aria-hidden="true">{initials}</span>
+            <span className="me-txt">
+              <b>{me.full_name}</b>
+              <small>{ROLE[r]}</small>
+            </span>
+            <form action={signOut}>
+              <button type="submit" className="icon-btn" aria-label="تسجيل الخروج" title="تسجيل الخروج">
+                <Icon name="logout" size={18} />
+              </button>
+            </form>
           </div>
-          <Nav items={items} />
-        </div>
-      </header>
-      <main className="wrap">{children}</main>
-    </>
+        }
+      />
+      <div className="content">
+        <header className="topbar noprint">
+          <PageTitle groups={groups} />
+          <Link href="/alerts" className={`bell ${bad ? "has-bad" : alerts.length ? "has" : ""}`} aria-label={`التنبيهات: ${alerts.length}`} title="التنبيهات">
+            <Icon name="bell" />
+            {alerts.length > 0 && <span className="badge">{alerts.length}</span>}
+          </Link>
+        </header>
+        <main className="wrap">{children}</main>
+      </div>
+      <Suspense>
+        <Enhance />
+      </Suspense>
+    </div>
   );
 }
