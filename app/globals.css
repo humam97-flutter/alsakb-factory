@@ -118,3 +118,9 @@ ol.stages { list-style: none; padding: 0; margin: 0; }
 .subnav nav.tabs a { color: var(--muted); padding: 8px 12px; }
 .subnav nav.tabs a[aria-current="page"] { color: var(--ink); }
 tfoot td { border-top: 2px solid var(--line); }
+
+.bell { margin-inline-start: auto; position: relative; color: #c3ced9; display: inline-flex; padding: 6px; border-radius: 6px; text-decoration: none; }
+.bell:hover { color: #fff; }
+.bell span { position: absolute; top: -2px; inset-inline-end: -4px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; background: var(--warn); color: #fff; }
+.bell.has-bad span { background: var(--bad); }
+.bell + .who { margin-inline-start: 12px; }

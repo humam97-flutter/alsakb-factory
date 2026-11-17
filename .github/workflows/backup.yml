@@ -1,0 +1,34 @@
+# نسخة احتياطية يومية لقاعدة البيانات
+# يحتاج سر بالمستودع اسمه SUPABASE_DB_URL (Settings → Secrets and variables → Actions)
+# قيمته من Supabase → Connect → Session pooler (مع كلمة سر قاعدة البيانات)
+name: Daily backup
+
+on:
+  schedule:
+    - cron: "0 23 * * *" # 2 الفجر بتوقيت بغداد
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check secret
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$DB" ]; then echo "::error::أضف السر SUPABASE_DB_URL أولاً"; exit 1; fi
+      - name: Dump
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          stamp=$(TZ=Asia/Baghdad date +%F)
+          mkdir out
+          docker run --rm -e DB postgres:17 sh -c 'pg_dump "$DB" --schema=public --no-owner --no-privileges' | gzip > "out/alsakb-$stamp.sql.gz"
+          ls -lh out
+          test $(stat -c %s "out/alsakb-$stamp.sql.gz") -gt 1000
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backup-${{ github.run_id }}
+          path: out/
+          retention-days: 90
