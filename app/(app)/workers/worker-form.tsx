@@ -28,6 +28,7 @@ export function WorkerForm({
             <Input name="phone" label="الهاتف" value={w?.phone} type="tel" />
             <Select name="active" label="الحالة" options={{ yes: "فعّال", no: "ترك العمل" }} value={w && !w.active ? "no" : "yes"} blank={false} />
             <Checks name="skills" label="يجيد تشغيل" items={machines.map((m) => ({ id: m.id, label: `${m.code}. ${m.name}` }))} selected={w?.skills ?? []} />
+            <Input name="leave_days" label="رصيد الإجازات السنوي (يوم)" value={w?.leave_days ?? 12} type="number" />
             <TextArea name="notes" label="ملاحظات" value={w?.notes} />
           </>
         )}

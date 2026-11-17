@@ -42,7 +42,7 @@ export default async function PayrollPage({ searchParams }: PageProps) {
             <tbody>
               {rows.map((r) => (
                 <tr key={r.worker_id}>
-                  <td>{r.full_name}</td>
+                  <td><a href={`/payroll/slip/${r.worker_id}?month=${month}`}>{r.full_name}</a></td>
                   <td className="n num">{money(r.daily_wage, r.currency)}</td>
                   <td className="n num">{num(r.days)}</td>
                   <td className="n num">{num(r.overtime_hours)}</td>

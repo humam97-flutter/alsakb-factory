@@ -86,7 +86,7 @@ export function num(n: number | string | null | undefined) {
   return Number(n).toLocaleString("en-US", { maximumFractionDigits: 3 });
 }
 
-export const today = () => new Date().toISOString().slice(0, 10);
+export const today = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Baghdad" });
 
 export const DOC_KIND: Record<string, Opt> = {
   incoming: { label: "كتاب وارد", tone: "info" },
