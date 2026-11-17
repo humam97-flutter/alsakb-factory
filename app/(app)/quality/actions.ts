@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { dbError, fail, list, numOr0, numOrNull, str } from "@/lib/form";
+import { ITP_TEMPLATES } from "@/lib/itp";
 import { supabase } from "@/lib/supabase/server";
 
 const back = (f: FormData, d: string) => str(f, "back") ?? d;
@@ -229,6 +230,9 @@ export async function saveHydro(form: FormData) {
   if (error) fail(b, dbError(error));
   if (result === "pass") {
     await db.from("work_order_stages").update({ status: "done" }).eq("order_id", orderId).eq("name", "فحص").neq("status", "done");
+    // بند الاختبار المائي بخطة الفحص ينسجل منجز
+    await db.from("itp_items").update({ status: "done", done_on: str(form, "day") ?? new Date().toISOString().slice(0, 10), done_by: str(form, "witness") })
+      .eq("order_id", orderId).eq("status", "pending").ilike("activity", "%الاختبار المائي%");
   }
   done(b + "#hydro");
 }
@@ -253,4 +257,109 @@ export async function addQualityFiles(orderId: string, category: string, refId: 
   }
   revalidatePath(`/orders/${orderId}/qa`);
   return { error: null };
+}
+
+// ---------- خطة الفحص ITP ----------
+const pt = (f: FormData, k: string) => {
+  const v = str(f, k);
+  return v && ["H", "W", "R", "M"].includes(v) ? v : null;
+};
+
+export async function generateItp(form: FormData) {
+  const db = await supabase();
+  const orderId = str(form, "order_id")!;
+  const b = `/orders/${orderId}/qa`;
+  const tpl = ITP_TEMPLATES[str(form, "template") ?? "vessel"] ?? ITP_TEMPLATES.vessel;
+  const { count } = await db.from("itp_items").select("id", { count: "exact", head: true }).eq("order_id", orderId);
+  if (count) fail(b, "الخطة موجودة. احذف بنودها أولاً إذا تريد قالب جديد.");
+  const { error } = await db.from("itp_items").insert(tpl.rows.map((r, i) => ({ order_id: orderId, seq: i + 1, ...r })));
+  if (error) fail(b, dbError(error));
+  done(b + "#itp");
+}
+
+export async function saveItpItem(form: FormData) {
+  const db = await supabase();
+  const orderId = str(form, "order_id")!;
+  const b = `/orders/${orderId}/qa`;
+  const id = str(form, "id");
+  const row = {
+    activity: str(form, "activity") ?? "بند",
+    reference: str(form, "reference"),
+    acceptance: str(form, "acceptance"),
+    record: str(form, "record"),
+    factory: pt(form, "factory"),
+    client: pt(form, "client"),
+    tpi: pt(form, "tpi"),
+  };
+  if (id) {
+    const { error } = await db.from("itp_items").update(row).eq("id", id);
+    if (error) fail(b, dbError(error));
+  } else {
+    const { data: last } = await db.from("itp_items").select("seq").eq("order_id", orderId).order("seq", { ascending: false }).limit(1).maybeSingle();
+    const { error } = await db.from("itp_items").insert({ ...row, order_id: orderId, seq: (last?.seq ?? 0) + 1 });
+    if (error) fail(b, dbError(error));
+  }
+  done(b + "#itp");
+}
+
+export async function setItpStatus(form: FormData) {
+  const db = await supabase();
+  const orderId = str(form, "order_id")!;
+  const status = str(form, "status") ?? "pending";
+  const { error } = await db.from("itp_items").update({
+    status,
+    done_on: status === "done" ? (str(form, "done_on") ?? new Date().toISOString().slice(0, 10)) : null,
+    done_by: status === "done" ? str(form, "done_by") : null,
+  }).eq("id", str(form, "id")!);
+  if (error) fail(`/orders/${orderId}/qa`, dbError(error));
+  revalidatePath(`/orders/${orderId}/qa`);
+}
+
+export async function deleteItpItem(form: FormData) {
+  const db = await supabase();
+  const orderId = str(form, "order_id")!;
+  const { error } = await db.from("itp_items").delete().eq("id", str(form, "id")!);
+  if (error) fail(`/orders/${orderId}/qa`, dbError(error));
+  revalidatePath(`/orders/${orderId}/qa`);
+}
+
+// ---------- شهادات المواد اليدوية ----------
+export async function saveCert(form: FormData) {
+  const db = await supabase();
+  const orderId = str(form, "order_id")!;
+  const b = `/orders/${orderId}/qa`;
+  const { error } = await db.from("material_certs").insert({
+    order_id: orderId,
+    item: str(form, "item") ?? "مادة",
+    grade: str(form, "grade"),
+    size: str(form, "size"),
+    qty: numOrNull(form, "qty"),
+    heat_no: str(form, "heat_no"),
+    cert_no: str(form, "cert_no"),
+    supplier: str(form, "supplier"),
+  });
+  if (error) fail(b, dbError(error));
+  done(b + "#trace");
+}
+
+export async function deleteCert(form: FormData) {
+  const db = await supabase();
+  const orderId = str(form, "order_id")!;
+  const { error } = await db.from("material_certs").delete().eq("id", str(form, "id")!);
+  if (error) fail(`/orders/${orderId}/qa`, dbError(error));
+  revalidatePath(`/orders/${orderId}/qa`);
+}
+
+// ---------- لوحة الاسم ----------
+export async function saveNameplate(form: FormData) {
+  const db = await supabase();
+  const orderId = str(form, "order_id")!;
+  const b = `/orders/${orderId}/qa`;
+  const plate: Record<string, string> = {};
+  for (const [k, v] of form.entries()) {
+    if (k.startsWith("np_") && typeof v === "string" && v.trim()) plate[k.slice(3)] = v.trim();
+  }
+  const { error } = await db.from("work_orders").update({ nameplate: plate }).eq("id", orderId);
+  if (error) fail(b, dbError(error));
+  done(b + "#nameplate");
 }

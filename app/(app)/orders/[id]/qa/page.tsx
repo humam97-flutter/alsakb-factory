@@ -6,6 +6,9 @@ import { can, getMe } from "@/lib/auth";
 import { fileSize, num, today } from "@/lib/labels";
 import { NCR_SOURCE, NDT_METHODS, WELD_KIND, WELD_STATUS } from "@/lib/quality";
 import { supabase } from "@/lib/supabase/server";
+import { nameplateDefaults } from "@/lib/itp";
+import { orderTrace } from "@/lib/traceability";
+import { ItpSection, NameplateSection, TraceSection } from "./sections";
 import { addQualityFiles, deleteHydro, deleteNcr, deleteNdt, deleteWeld, saveHydro, saveNcr, saveNdt, saveWeld, updateWeld } from "../../../quality/actions";
 
 // ملف جودة الأمر: خريطة اللحامات، الفحوصات، الاختبار المائي، وعدم المطابقة
@@ -15,8 +18,8 @@ export default async function OrderQaPage({ params, searchParams }: IdPageProps)
   const me = await getMe();
   const edit = can.production(me.role);
   const db = await supabase();
-  const [{ data: o }, { data: welds }, { data: ndt }, { data: hydro }, { data: ncrs }, { data: wps }, { data: workers }, { data: files }, { data: calc }] = await Promise.all([
-    db.from("work_orders").select("id, no, product, client").eq("id", id).maybeSingle(),
+  const [{ data: o }, { data: welds }, { data: ndt }, { data: hydro }, { data: ncrs }, { data: wps }, { data: workers }, { data: files }, { data: calc }, { data: itp }, { data: calcAny }, trace] = await Promise.all([
+    db.from("work_orders").select("id, no, product, client, nameplate, created_at").eq("id", id).maybeSingle(),
     db.from("welds").select("*").eq("order_id", id).order("kind").order("code"),
     db.from("ndt_reports").select("*").eq("order_id", id).order("day"),
     db.from("hydro_tests").select("*").eq("order_id", id).order("day"),
@@ -25,6 +28,9 @@ export default async function OrderQaPage({ params, searchParams }: IdPageProps)
     db.from("workers").select("id, full_name, welder_stamp").eq("active", true).order("full_name"),
     db.from("order_files").select("*").eq("order_id", id).neq("category", "general").order("created_at"),
     db.from("calcs").select("results").eq("order_id", id).eq("kind", "vessel").limit(1).maybeSingle(),
+    db.from("itp_items").select("*").eq("order_id", id).order("seq"),
+    db.from("calcs").select("kind, inputs, results").eq("order_id", id).in("kind", ["vessel", "tank"]).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    orderTrace(db, id),
   ]);
   if (!o) notFound();
   const ws = welds ?? [];
@@ -35,6 +41,10 @@ export default async function OrderQaPage({ params, searchParams }: IdPageProps)
   const count = (s: string) => ws.filter((w) => w.status === s).length;
   const hydroBar = calc?.results ? Math.round(Number((calc.results as { hydro: number }).hydro) * 10 * 10) / 10 : null;
   const back = `/orders/${id}/qa`;
+  const savedPlate = o.nameplate as Record<string, string>;
+  const hasPlate = Object.keys(savedPlate ?? {}).length > 0;
+  const plateVals = hasPlate ? savedPlate : nameplateDefaults(o, calcAny as never);
+  const suggest = calcAny?.kind === "tank" ? "tank" : calcAny?.kind === "vessel" ? "vessel" : "structure";
 
   const Files = ({ cat, refId }: { cat: string; refId: string }) => (
     <span className="row" style={{ gap: 6 }}>
@@ -50,7 +60,10 @@ export default async function OrderQaPage({ params, searchParams }: IdPageProps)
       <Alert error={sp.error} ok={sp.ok} />
       <div className="bar">
         <h2>الجودة واللحام · أمر #{o.no} {o.product}</h2>
-        <Link className="btn ghost noprint" href={`/orders/${id}`}>رجوع للأمر</Link>
+        <div className="row noprint">
+          <Link className="btn" href={`/orders/${id}/databook`}>ملف البيانات Data Book</Link>
+          <Link className="btn ghost" href={`/orders/${id}`}>رجوع للأمر</Link>
+        </div>
       </div>
       <div className="kpis">
         <div className="kpi"><span>اللحامات</span><b>{ws.length}</b></div>
@@ -58,6 +71,9 @@ export default async function OrderQaPage({ params, searchParams }: IdPageProps)
         <div className="kpi"><span>تنتظر الفحص</span><b>{count("welded")}</b></div>
         <div className="kpi"><span>تحتاج تصليح</span><b className={count("repair") ? "neg" : ""}>{count("repair")}</b></div>
       </div>
+
+      <ItpSection orderId={id} items={itp ?? []} edit={edit} suggest={suggest} />
+      <TraceSection orderId={id} rows={trace.rows} missing={trace.missing} files={files ?? []} edit={edit} />
 
       <h3 className="sec" id="welds">خريطة اللحامات</h3>
       {ws.length ? (
@@ -261,6 +277,8 @@ export default async function OrderQaPage({ params, searchParams }: IdPageProps)
           <button className="btn ghost" type="submit">تسجيل NCR</button>
         </form>
       )}
+
+      <NameplateSection orderId={id} values={plateVals} saved={hasPlate} edit={edit} />
     </>
   );
 }

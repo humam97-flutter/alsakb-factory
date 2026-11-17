@@ -300,3 +300,16 @@ bdi.ltr { direction: ltr; unicode-bidi: isolate; }
 .tbl.dip { max-width: 520px; }
 details > summary.btn { list-style: none; display: inline-flex; cursor: pointer; }
 details > summary.btn::-webkit-details-marker { display: none; }
+
+/* ملف البيانات Data Book */
+.db h3 { margin: 22px 0 8px; font-size: 16px; border-bottom: 2px solid #333; padding-bottom: 4px; }
+.db table { width: 100%; font-size: 12.5px; }
+.db td, .db th { white-space: normal; }
+.db .toc { columns: 2; font-size: 13px; margin: 6px 0 0; padding-inline-start: 20px; }
+.db .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.db .np { border: 2px solid #333; border-radius: 6px; padding: 8px 10px; }
+.db .np table { border: 0; }
+.db .np-title { font-weight: 700; text-align: center; margin-bottom: 6px; letter-spacing: .5px; }
+.db .empty { color: #777; font-size: 12.5px; }
+@media (max-width: 700px) { .db .two { grid-template-columns: 1fr; } .db .toc { columns: 1; } }
+@media print { .db .brk { break-before: page; } .db tr { break-inside: avoid; } }
