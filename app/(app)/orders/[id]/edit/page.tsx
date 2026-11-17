@@ -10,11 +10,12 @@ export default async function EditOrderPage({ params, searchParams }: IdPageProp
   const { id } = await params;
   const { error } = await searchParams;
   const db = await supabase();
-  const [{ data: order }, { data: finance }, { data: workers }, { data: machines }] = await Promise.all([
+  const [{ data: order }, { data: finance }, { data: workers }, { data: machines }, { data: customers }] = await Promise.all([
     db.from("work_orders").select("*").eq("id", id).maybeSingle(),
     db.from("work_order_finance").select("*").eq("order_id", id).maybeSingle(),
     db.from("workers").select("id, full_name").eq("active", true).order("full_name"),
     db.from("machines").select("id, code, name").order("code"),
+    db.from("customers").select("name").eq("active", true).order("name"),
   ]);
   if (!order) notFound();
   return (
@@ -29,6 +30,7 @@ export default async function EditOrderPage({ params, searchParams }: IdPageProp
         showFinance={can.finance(me.role)}
         workers={workers ?? []}
         machines={(machines ?? []).sort((a, b) => Number(a.code) - Number(b.code))}
+        customers={(customers ?? []).map((c) => c.name)}
       />
       <form action={deleteOrder} className="panel row" style={{ marginTop: 16 }}>
         <input type="hidden" name="id" value={order.id} />

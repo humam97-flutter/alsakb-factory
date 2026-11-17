@@ -113,3 +113,8 @@ ol.stages { list-style: none; padding: 0; margin: 0; }
 
 .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 10px; }
 .thumbs img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); display: block; background: var(--chip); }
+
+.subnav { margin: -6px 0 14px; border-bottom: 1px solid var(--line); }
+.subnav nav.tabs a { color: var(--muted); padding: 8px 12px; }
+.subnav nav.tabs a[aria-current="page"] { color: var(--ink); }
+tfoot td { border-top: 2px solid var(--line); }

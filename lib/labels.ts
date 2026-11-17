@@ -116,3 +116,13 @@ export function fileSize(n: number | null | undefined) {
   if (n < 1024 * 1024) return `${Math.max(1, Math.round(n / 1024))} ك.ب`;
   return `${(n / 1024 / 1024).toFixed(1)} م.ب`;
 }
+
+export const QUOTE_STATUS: Record<string, Opt> = {
+  draft: { label: "مسودة", tone: "mut" },
+  sent: { label: "مُرسل", tone: "info" },
+  accepted: { label: "مقبول", tone: "ok" },
+  rejected: { label: "مرفوض", tone: "bad" },
+};
+
+export const PAY_METHOD: Record<string, string> = { cash: "نقد", transfer: "حوالة", cheque: "صك" };
+export const LINE_UNITS = ["قطعة", "كغم", "طن", "متر", "م²", "ساعة", "مقطوعة"];

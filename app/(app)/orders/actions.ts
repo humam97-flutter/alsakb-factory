@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { can, getMe } from "@/lib/auth";
 import { dbError, fail, list, numOr0, numOrNull, str } from "@/lib/form";
+import { ensureCustomer } from "@/lib/customers";
 import { supabase } from "@/lib/supabase/server";
 
 export async function saveOrder(form: FormData) {
@@ -14,8 +15,10 @@ export async function saveOrder(form: FormData) {
   const product = str(form, "product");
   if (!product) fail(back, "اكتب اسم المنتج.");
 
+  const client = str(form, "client");
   const row = {
-    client: str(form, "client"),
+    customer_id: await ensureCustomer(db, client, str(form, "client_phone")),
+    client,
     client_phone: str(form, "client_phone"),
     product,
     qty: numOrNull(form, "qty"),

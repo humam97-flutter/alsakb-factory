@@ -51,6 +51,7 @@ export function Input({
   type = "text",
   full,
   required,
+  list,
 }: {
   name: string;
   label: string;
@@ -58,6 +59,7 @@ export function Input({
   type?: string;
   full?: boolean;
   required?: boolean;
+  list?: string;
 }) {
   return (
     <label className={full ? "full" : undefined}>
@@ -68,6 +70,7 @@ export function Input({
         type={type}
         defaultValue={value ?? ""}
         required={required}
+        list={list}
         {...(type === "number" ? { step: "any", inputMode: "decimal" as const } : {})}
       />
     </label>
