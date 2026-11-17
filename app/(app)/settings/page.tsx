@@ -18,6 +18,7 @@ export default async function SettingsPage({ searchParams }: PageProps) {
           <Input name="address" label="العنوان" value={s?.address} full />
           <Input name="phone" label="هواتف المعمل" value={s?.phone} />
           <Input name="usd_rate" label="سعر صرف الدولار (دينار)" value={s?.usd_rate} type="number" />
+          <Input name="shift_hours" label="ساعات الدوام اليومي (اللي يزيد إضافي)" value={s?.shift_hours} type="number" />
           <TextArea name="invoice_footer" label="ملاحظة أسفل الفاتورة وعرض السعر" value={s?.invoice_footer} />
         </div>
         <div className="actions"><button className="btn" type="submit">حفظ</button></div>

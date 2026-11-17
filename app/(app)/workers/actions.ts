@@ -22,6 +22,7 @@ export async function saveWorker(form: FormData) {
       skills: list(form, "skills"),
       active: form.get("active") !== "no",
       notes: str(form, "notes"),
+      leave_days: Number(form.get("leave_days") || 12),
     };
     const res = id
       ? await db.from("workers").update(row).eq("id", id).select("id").single()
@@ -101,4 +102,33 @@ export async function deletePayment(form: FormData) {
   const { error } = await db.from("worker_payments").delete().eq("id", str(form, "id")!);
   if (error) fail(`/payroll?month=${month}`, dbError(error));
   revalidatePath("/payroll");
+}
+
+// مسح بطاقة العامل: دخول أو خروج
+export async function scanWorker(form: FormData) {
+  const db = await supabase();
+  const id = str(form, "worker_id")!;
+  const { data, error } = await db.rpc("scan_attendance", { p_worker: id });
+  if (error) fail(`/workers/scan/${id}`, error.message);
+  revalidatePath("/workers");
+  redirect(`/workers/scan/${id}?done=${data}`);
+}
+
+// إجازة من يوم إلى يوم
+export async function markLeave(form: FormData) {
+  const db = await supabase();
+  const worker_id = str(form, "worker_id")!;
+  const back = `/workers/${worker_id}`;
+  const from = str(form, "from");
+  const to = str(form, "to") ?? from;
+  if (!from || !to || to < from) fail(back, "حدد من يوم إلى يوم.");
+  const rows: { worker_id: string; day: string; status: string }[] = [];
+  for (let d = new Date(from + "T00:00:00Z"); d.toISOString().slice(0, 10) <= to; d.setUTCDate(d.getUTCDate() + 1)) {
+    rows.push({ worker_id, day: d.toISOString().slice(0, 10), status: "leave" });
+    if (rows.length > 60) fail(back, "الإجازة أطول من 60 يوم.");
+  }
+  const { error } = await db.from("attendance").upsert(rows);
+  if (error) fail(back, dbError(error));
+  revalidatePath(back);
+  redirect(back + "?ok=" + encodeURIComponent(`انسجلت إجازة ${rows.length} يوم.`));
 }

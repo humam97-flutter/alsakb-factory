@@ -5,6 +5,8 @@ import { ATTENDANCE, today } from "@/lib/labels";
 import { supabase } from "@/lib/supabase/server";
 import { markAttendance, setOvertime } from "./actions";
 
+const hm = (t: string) => new Date(t).toLocaleTimeString("en-GB", { timeZone: "Asia/Baghdad", hour: "2-digit", minute: "2-digit" });
+
 export default async function WorkersPage({ searchParams }: PageProps) {
   const me = await requireRole(can.attendance);
   const sp = await searchParams;
@@ -13,7 +15,7 @@ export default async function WorkersPage({ searchParams }: PageProps) {
   const db = await supabase();
   const [{ data: workers }, { data: att }] = await Promise.all([
     db.from("workers").select("id, full_name, job, phone, active").order("full_name"),
-    db.from("attendance").select("worker_id, status, overtime_hours").eq("day", day),
+    db.from("attendance").select("worker_id, status, overtime_hours, check_in, check_out").eq("day", day),
   ]);
   const marks = new Map((att ?? []).map((a) => [a.worker_id, a]));
   const activeW = (workers ?? []).filter((w) => w.active);
@@ -26,6 +28,8 @@ export default async function WorkersPage({ searchParams }: PageProps) {
         <h2>الحضور</h2>
         <input type="date" name="day" defaultValue={day} aria-label="اليوم" style={{ maxWidth: 180 }} />
         <button className="btn ghost sm" type="submit">عرض</button>
+        <Link className="btn ghost sm" href="/workers/productivity">الإنتاجية</Link>
+        {edit && <Link className="btn ghost sm" href="/workers/cards">بطاقات QR</Link>}
         <span className="meta">
           حاضر <b className="num">{count("present")}</b> · نصف يوم <b className="num">{count("half")}</b> · غائب <b className="num">{count("absent")}</b> · لم يُسجل{" "}
           <b className="num">{activeW.length - activeW.filter((w) => marks.has(w.id)).length}</b>
@@ -49,7 +53,10 @@ export default async function WorkersPage({ searchParams }: PageProps) {
                 const a = marks.get(w.id);
                 return (
                   <tr key={w.id}>
-                    <td>{w.full_name}</td>
+                    <td>
+                      <Link href={`/workers/scan/${w.id}`}>{w.full_name}</Link>
+                      {a?.check_in && <div className="meta num">{hm(a.check_in)}{a.check_out ? ` ← ${hm(a.check_out)}` : ""}</div>}
+                    </td>
                     <td>
                       {edit ? (
                         <form action={markAttendance} className="seg" role="group" aria-label={`حضور ${w.full_name}`}>

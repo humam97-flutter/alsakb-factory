@@ -254,6 +254,7 @@ export async function saveSettings(form: FormData) {
       phone: str(form, "phone"),
       invoice_footer: str(form, "invoice_footer"),
       usd_rate: numOrNull(form, "usd_rate") ?? 1500,
+      ...(form.has("shift_hours") ? { shift_hours: numOrNull(form, "shift_hours") ?? 8 } : {}),
     })
     .eq("id", 1);
   if (error) fail("/settings", dbError(error));
