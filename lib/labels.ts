@@ -136,3 +136,10 @@ export const REQUEST_STATUS: Record<string, Opt> = {
 
 export const EXPENSE_CATEGORIES = ["إيجار", "كهرباء وطنية", "مولدة ووقود", "غاز وأوكسجين", "نقل وتحميل", "ضيافة", "صيانة مبنى", "رواتب إدارية", "ضرائب ورسوم", "اتصالات وإنترنت", "أخرى"];
 export const CASH_KIND: Record<string, string> = { opening: "رصيد افتتاحي", deposit: "إيداع", withdraw: "سحب", exchange: "تصريف عملة" };
+
+export const QC_RESULT: Record<string, Opt> = {
+  pass: { label: "مقبول", tone: "ok" },
+  rework: { label: "يحتاج تصليح", tone: "warn" },
+  fail: { label: "مرفوض", tone: "bad" },
+};
+export const QC_ITEMS = ["الأبعاد والقياسات", "اللحام", "الاستقامة والتشطيب", "الصبغ", "العدد والكمية", "التغليف والتعليم"];

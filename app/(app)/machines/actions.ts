@@ -19,6 +19,7 @@ export async function saveMachine(form: FormData) {
     status: str(form, "status") ?? "running",
     operator_id: str(form, "operator_id"),
     next_service: str(form, "next_service"),
+    hour_rate: numOrNull(form, "hour_rate") ?? 0,
     notes: str(form, "notes"),
   };
   const { error } = id ? await db.from("machines").update(row).eq("id", id) : await db.from("machines").insert(row);

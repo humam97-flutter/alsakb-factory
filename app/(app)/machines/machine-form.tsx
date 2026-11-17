@@ -20,6 +20,7 @@ export function MachineForm({ m, workers }: { m: Record<string, any> | null; wor
         />
         <Select name="operator_id" label="المشغل" options={Object.fromEntries(workers.map((w) => [w.id, w.full_name]))} value={m?.operator_id} />
         <Input name="next_service" label="الصيانة القادمة" value={m?.next_service} type="date" />
+        <Input name="hour_rate" label="كلفة ساعة التشغيل (كهرباء، غاز، استهلاك) د.ع" value={m?.hour_rate} type="number" />
         <TextArea name="notes" label="ملاحظات" value={m?.notes} />
       </div>
       <div className="actions">
