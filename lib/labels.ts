@@ -87,3 +87,32 @@ export function num(n: number | string | null | undefined) {
 }
 
 export const today = () => new Date().toISOString().slice(0, 10);
+
+export const DOC_KIND: Record<string, Opt> = {
+  incoming: { label: "كتاب وارد", tone: "info" },
+  outgoing: { label: "كتاب صادر", tone: "ok" },
+  contract: { label: "عقد", tone: "warn" },
+  official: { label: "مستند رسمي", tone: "mut" },
+  other: { label: "أخرى", tone: "mut" },
+};
+
+export const DOC_STATUS: Record<string, Opt> = {
+  pending: { label: "بانتظار إجراء", tone: "warn" },
+  done: { label: "منجز", tone: "ok" },
+  archived: { label: "مؤرشف", tone: "mut" },
+};
+
+export const labelsOf = (m: Record<string, { label: string }>) =>
+  Object.fromEntries(Object.entries(m).map(([k, v]) => [k, v.label]));
+
+export function addDays(day: string, n: number) {
+  const d = new Date(day + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+export function fileSize(n: number | null | undefined) {
+  if (!n) return "";
+  if (n < 1024 * 1024) return `${Math.max(1, Math.round(n / 1024))} ك.ب`;
+  return `${(n / 1024 / 1024).toFixed(1)} م.ب`;
+}

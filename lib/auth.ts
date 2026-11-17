@@ -23,6 +23,7 @@ export const can = {
   attendance: (r: Role) => r === "manager" || r === "production" || r === "accountant",
   stages: (r: Role) => r === "manager" || r === "production" || r === "operator",
   users: (r: Role) => r === "manager",
+  docs: (r: Role) => r === "manager" || r === "accountant",
 };
 
 export async function requireRole(check: (r: Role) => boolean) {
