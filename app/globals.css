@@ -110,6 +110,7 @@ textarea { min-height: 80px; resize: vertical; }
 a.card:hover { box-shadow: var(--shadow-lg); transform: translateY(-1px); }
 .card .t { font-weight: 600; overflow-wrap: anywhere; }
 .meta { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 12px; }
+td.meta, th.meta { display: table-cell; }
 .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .between { justify-content: space-between; }
 .pill { font-family: var(--f-body); display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: var(--chip); white-space: nowrap; }
@@ -118,6 +119,7 @@ a.card:hover { box-shadow: var(--shadow-lg); transform: translateY(-1px); }
 .tone-ok { color: var(--ok); } .tone-warn { color: var(--warn); } .tone-bad { color: var(--bad); } .tone-info { color: var(--info); } .tone-mut { color: var(--mut); }
 .s-ok { --s: var(--ok); } .s-warn { --s: var(--warn); } .s-bad { --s: var(--bad); } .s-info { --s: var(--info); } .s-mut { --s: var(--line); }
 .num { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.num .meta { font-family: var(--f-body); }
 .pos { color: var(--ok); } .neg { color: var(--bad); }
 
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 20px; }

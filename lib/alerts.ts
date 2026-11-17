@@ -106,6 +106,18 @@ export const getAlerts = cache(async (me: Me): Promise<AlertItem[]> => {
     }
     for (const [oid, e] of byOrder) out.push({ level: "bad", group: "الجودة", text: `أمر #${e.no}: لحامات تحتاج تصليح ${e.codes.join("، ")}`, href: `/orders/${oid}/qa` });
   }
+  // المشاريع: خطابات ضمان تنتهي، ومناقصات قرب موعدها
+  if (can.finance(r)) {
+    const [{ data: gs }, { data: tn }] = await Promise.all([
+      db.from("guarantees").select("id, kind, bank, expires_on, project:projects(name)").eq("status", "active").lte("expires_on", addDays(t, 30)),
+      db.from("tenders").select("id, no, title, submit_due").eq("status", "preparing").lte("submit_due", addDays(t, 7)).gte("submit_due", t),
+    ]);
+    for (const g of gs ?? []) {
+      const pn = (g.project as unknown as { name: string } | null)?.name;
+      out.push({ level: g.expires_on! < t ? "bad" : "warn", group: "المشاريع", text: `خطاب ضمان ${g.bank ?? ""}${pn ? ` (${pn})` : ""} ${g.expires_on! < t ? "انتهى" : "ينتهي"} ${g.expires_on}`, href: "/projects/guarantees" });
+    }
+    for (const x of tn ?? []) out.push({ level: "warn", group: "المشاريع", text: `مناقصة #${x.no} ${x.title}: آخر موعد ${x.submit_due}`, href: "/projects/tenders" });
+  }
   // التخطيط: مراحل خلص وقتها المخطط وما خلصت
   if (can.production(r)) {
     const { data: behind } = await db.from("work_order_stages").select("order_id, name, plan_end, order:work_orders!inner(no, status)").neq("status", "done").lt("plan_end", t).in("order.status", ["new", "in_progress"]);
