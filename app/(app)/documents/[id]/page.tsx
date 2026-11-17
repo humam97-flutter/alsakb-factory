@@ -4,8 +4,8 @@ import { Alert, Pill, type IdPageProps } from "@/components/ui";
 import { can, requireRole } from "@/lib/auth";
 import { DOC_KIND, DOC_STATUS, fileSize, money, today } from "@/lib/labels";
 import { supabase } from "@/lib/supabase/server";
-import { deleteFile, setDocumentStatus } from "../actions";
-import { Upload } from "./upload";
+import { Upload } from "@/components/upload";
+import { addFiles, deleteFile, setDocumentStatus } from "../actions";
 
 export default async function DocumentPage({ params, searchParams }: IdPageProps) {
   await requireRole(can.docs);
@@ -79,7 +79,7 @@ export default async function DocumentPage({ params, searchParams }: IdPageProps
 
       <h3 className="sec">الملفات</h3>
       <div className="panel">
-        <Upload documentId={d.id} />
+        <Upload bucket="documents" folder={d.id} save={addFiles.bind(null, d.id)} />
         {files?.length ? (
           <ul className="stages" style={{ marginTop: 10 }}>
             {files.map((f) => (

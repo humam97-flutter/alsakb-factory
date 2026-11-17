@@ -88,6 +88,7 @@ export default async function WorkersPage({ searchParams }: PageProps) {
       <div className="bar" style={{ marginTop: 26 }}>
         <h2>العمال</h2>
         {edit && <Link className="btn" href="/workers/new">+ عامل</Link>}
+        <a className="btn ghost sm" href="/export/workers">Excel</a>
       </div>
       <div className="grid">
         {(workers ?? []).map((w) => (

@@ -41,6 +41,8 @@ export default async function OrdersPage({ searchParams }: PageProps) {
             + أمر عمل
           </Link>
         )}
+        <a className="btn ghost sm" href="/export/orders">Excel</a>
+        {can.finance(me.role) && <a className="btn ghost sm" href="/export/order-costs">Excel الكلفة</a>}
       </form>
       {!orders?.length ? (
         <div className="empty">لا توجد أوامر عمل هنا.{can.production(me.role) && " اضغط «+ أمر عمل» لتسجيل أول أمر."}</div>

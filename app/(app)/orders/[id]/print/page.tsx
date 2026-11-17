@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { PrintButton } from "@/components/print-button";
 import type { IdPageProps } from "@/components/ui";
 import { num, PRIORITY, today } from "@/lib/labels";
+import { qrSvg, siteUrl } from "@/lib/qr";
 import { supabase } from "@/lib/supabase/server";
 
 // ورقة الشغل للعمال: بدون أسعار
@@ -14,6 +15,7 @@ export default async function PrintOrderPage({ params }: IdPageProps) {
     db.from("machines").select("id, name"),
   ]);
   if (!o) notFound();
+  const qr = await qrSvg(await siteUrl(`/orders/${o.id}`));
   const mName = new Map((machines ?? []).map((m) => [m.id, m.name]));
   const rows: [string, string | null][] = [
     ["المنتج", o.product],
@@ -35,7 +37,13 @@ export default async function PrintOrderPage({ params }: IdPageProps) {
           <h2 style={{ margin: 0, fontSize: 22 }}>أمر عمل #{o.no}</h2>
           <div>معمل السكب الحديدي</div>
         </div>
-        <div>تاريخ الطباعة: {today()}</div>
+        <div className="row" style={{ gap: 12 }}>
+          <div style={{ fontSize: 12, textAlign: "center" }}>
+            <div style={{ width: 84, height: 84 }} dangerouslySetInnerHTML={{ __html: qr }} />
+            صوّره لتحديث المراحل
+          </div>
+          <div>تاريخ الطباعة: {today()}</div>
+        </div>
       </div>
       <table style={{ border: "1px solid #999" }}>
         <tbody>

@@ -110,3 +110,6 @@ ol.stages { list-style: none; padding: 0; margin: 0; }
   header.top, .noprint { display: none !important; }
   body { background: #fff; color: #000; }
 }
+
+.thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 10px; }
+.thumbs img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); display: block; background: var(--chip); }

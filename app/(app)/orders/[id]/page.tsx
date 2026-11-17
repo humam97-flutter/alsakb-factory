@@ -5,6 +5,8 @@ import { can, getMe } from "@/lib/auth";
 import { money, num, ORDER_STATUS, PRIORITY, STAGE_STATUS, today } from "@/lib/labels";
 import { supabase } from "@/lib/supabase/server";
 import { addStage, deleteStage, setStage } from "../actions";
+import { OrderFiles } from "./files";
+import { waLink } from "@/lib/share";
 
 export default async function OrderPage({ params, searchParams }: IdPageProps) {
   const { id } = await params;
@@ -60,6 +62,19 @@ export default async function OrderPage({ params, searchParams }: IdPageProps) {
         <Link className="btn ghost" href={`/orders/${o.id}/print`}>
           ورقة الشغل للطباعة
         </Link>
+        <a
+          className="btn ghost"
+          target="_blank"
+          rel="noopener"
+          href={waLink(
+            o.client_phone,
+            `معمل السكب الحديدي\nأمر عمل #${o.no}: ${o.product}\nالحالة: ${ORDER_STATUS[o.status]?.label}` +
+              `\nالمراحل المنجزة: ${(stages ?? []).filter((s) => s.status === "done").length} من ${(stages ?? []).length}` +
+              (o.due_date ? `\nموعد التسليم: ${o.due_date}` : ""),
+          )}
+        >
+          إرسال الحالة بالواتساب
+        </a>
       </div>
 
       <div className="panel kv">
@@ -77,6 +92,8 @@ export default async function OrderPage({ params, searchParams }: IdPageProps) {
           {o.notes}
         </div>
       )}
+
+      <OrderFiles orderId={o.id} canEdit={can.production(me.role)} />
 
       <h3 className="sec">مراحل العمل</h3>
       <div className="panel">
