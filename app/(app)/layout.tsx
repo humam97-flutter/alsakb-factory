@@ -16,6 +16,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     ...(can.finance(r) ? [{ href: "/sales", label: "المبيعات" }] : []),
     ...(can.requests(r) ? [{ href: "/purchases", label: "المشتريات" }] : []),
     ...(can.finance(r) ? [{ href: "/payroll", label: "الرواتب" }] : []),
+    ...(can.finance(r) ? [{ href: "/accounts", label: "الحسابات" }] : []),
     ...(can.docs(r) ? [{ href: "/documents", label: "المستندات" }] : []),
     { href: "/tools/weight", label: "حاسبة الوزن" },
     ...(can.users(r) ? [{ href: "/users", label: "المستخدمون" }] : []),
