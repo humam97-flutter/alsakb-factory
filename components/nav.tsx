@@ -69,10 +69,13 @@ export function PageTitle({ groups }: { groups: NavGroup[] }) {
 // تبويبات داخل القسم (المبيعات، المشتريات...)
 export function Nav({ items }: { items: { href: string; label: string }[] }) {
   const path = usePathname();
+  // التبويب الفعال هو أطول رابط يطابق بداية المسار
+  const hit = (h: string) => (h === "/" ? path === "/" : path === h || path.startsWith(h + "/"));
+  const best = items.filter((i) => hit(i.href)).sort((a, b) => b.href.length - a.href.length)[0]?.href;
   return (
     <nav className="tabs">
       {items.map((i) => {
-        const active = i.href === "/" ? path === "/" : path.startsWith(i.href);
+        const active = i.href === best;
         return (
           <Link key={i.href} href={i.href} aria-current={active ? "page" : undefined}>
             {i.label}

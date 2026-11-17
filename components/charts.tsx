@@ -12,7 +12,7 @@ const short = (v: number) => {
 export type Series = { name: string; color: string; values: number[] };
 
 // أعمدة متجاورة لكل شهر (مثلاً المبيعات مقابل الكلف)
-export function GroupedBars({ labels, series, height = 220 }: { labels: string[]; series: Series[]; height?: number }) {
+export function GroupedBars({ labels, series, height = 220, unit }: { labels: string[]; series: Series[]; height?: number; unit?: string }) {
   const W = 640, H = height, pad = { t: 14, b: 28, s: 70 };
   const max = Math.max(1, ...series.flatMap((s) => s.values));
   const ticks = [0, 0.5, 1].map((f) => f * max);
@@ -38,7 +38,7 @@ export function GroupedBars({ labels, series, height = 220 }: { labels: string[]
                 const top = y(Math.max(0, v));
                 return (
                   <rect key={s.name} x={gx + k * (bw + 2)} y={top} width={bw} height={Math.max(v > 0 ? 2 : 0, y(0) - top)} rx={4} fill={s.color}>
-                    <title>{`${l} · ${s.name}: ${money(v)}`}</title>
+                    <title>{`${l} · ${s.name}: ${unit ? `${Math.round(v).toLocaleString("en-US")} ${unit}` : money(v)}`}</title>
                   </rect>
                 );
               })}
