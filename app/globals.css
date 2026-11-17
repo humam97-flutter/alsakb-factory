@@ -296,3 +296,5 @@ bdi.ltr { direction: ltr; unicode-bidi: isolate; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--muted); }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-inline-end: 5px; vertical-align: -1px; }
 @media print { .nest-card { break-inside: avoid; box-shadow: none; } }
+.fields label small { display: block; font-weight: 400; font-size: 11.5px; margin-top: 2px; }
+.tbl.dip { max-width: 520px; }

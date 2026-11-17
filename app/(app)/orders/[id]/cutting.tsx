@@ -10,10 +10,12 @@ import { deletePart, savePart } from "../../cutting/actions";
 // قطع الصاج المطلوبة للأمر، ومخططات قصها
 export async function OrderCutting({ orderId, role }: { orderId: string; role: Role }) {
   const db = await supabase();
-  const [{ data: parts }, { data: plans }] = await Promise.all([
+  const [{ data: parts }, { data: plans }, { data: calcs }] = await Promise.all([
     db.from("cut_parts").select("*").eq("order_id", orderId).order("created_at"),
     db.from("cut_plans").select("id, status, layout, plate_kg, parts_kg, remnant_kg, scrap_kg, loss_value, plate:plates(serial, grade, thickness, length_mm, width_mm)").eq("order_id", orderId).order("created_at"),
+    db.from("calcs").select("id, kind, title, inputs").eq("order_id", orderId).order("created_at"),
   ]);
+  const calcPath: Record<string, string> = { vessel: "/tools/engineering", tank: "/tools/engineering/tank" };
   const edit = can.production(role);
   const done = countPlaced((plans ?? []).filter((p) => p.status === "done"));
   const planned = countPlaced((plans ?? []).filter((p) => p.status === "draft"));
@@ -29,6 +31,17 @@ export async function OrderCutting({ orderId, role }: { orderId: string; role: R
         قطع القص من الألواح {ps.length > 0 && <span className="meta">({num(Math.round(totalKg))} كغم صافي)</span>}
       </h3>
       <div className="panel">
+        {(calcs?.length ?? 0) > 0 && (
+          <p style={{ marginTop: 0 }}>
+            <span className="meta">الحسابات الهندسية: </span>
+            {calcs!.map((c, i) => (
+              <span key={c.id}>
+                {i > 0 && "، "}
+                <Link href={`${calcPath[c.kind] ?? "/tools/engineering"}?${new URLSearchParams(c.inputs as Record<string, string>).toString()}`}>{c.title}</Link>
+              </span>
+            ))}
+          </p>
+        )}
         {ps.length ? (
           <div className="tbl" style={{ boxShadow: "none", margin: "0 0 10px" }}>
             <table data-plain>
