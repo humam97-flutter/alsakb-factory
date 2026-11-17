@@ -18,7 +18,7 @@ export default async function PrintOrderPage({ params }: IdPageProps) {
   ]);
   if (!o) notFound();
   const brand = await getBrand();
-  const qr = await qrSvg(await siteUrl(`/orders/${o.id}`));
+  const qr = await qrSvg(await siteUrl(`/floor/order/${o.id}`));
   const mName = new Map((machines ?? []).map((m) => [m.id, m.name]));
   const rows: [string, string | null][] = [
     ["المنتج", o.product],

@@ -21,7 +21,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       title: "التشغيل",
       items: [
         { href: "/orders", label: "أوامر العمل", icon: "orders" },
-        { href: "/production", label: "الإنتاج", icon: "factory" },
+        { href: "/production", label: "الإنتاج والتخطيط", icon: "factory" },
+        ...(can.stages(r) ? [{ href: "/floor", label: "شاشة الورشة", icon: "clock" }] : []),
         { href: "/cutting", label: "القص والألواح", icon: "cut" },
         { href: "/tools/engineering", label: "الحاسبات الهندسية", icon: "calc" },
         { href: "/quality", label: "الجودة واللحام", icon: "check" },
