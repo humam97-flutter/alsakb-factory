@@ -44,6 +44,7 @@
    - `supabase/migrations/0007_accounts.sql`
    - `supabase/migrations/0008_production.sql`
    - `supabase/migrations/0009_workers.sql`
+   - `supabase/migrations/0010_branding.sql` (شعار المعمل وبيانات الترويسة)
 3. **إعدادات الدخول**: في Authentication → Providers → Email، أطفئ «Confirm email» (الحسابات ينشئها المدير، وما تحتاج تأكيد).
 4. **المفاتيح**: انسخ `.env.example` إلى `.env.local` واملأ القيم من Project Settings → API Keys: الرابط، والمفتاح المنشور (sb_publishable_)، والمفتاح السري (sb_secret_).
 5. **أول مدير**:

@@ -1,15 +1,19 @@
+import { cut, Pager, paging } from "@/components/pager";
 import Link from "next/link";
 import { Alert, type PageProps } from "@/components/ui";
 import { money, today } from "@/lib/labels";
 import { supabase } from "@/lib/supabase/server";
 
 export default async function InvoicesPage({ searchParams }: PageProps) {
-  const { open, error, from, to } = await searchParams;
+  const __sp = await searchParams;
+  const { open, error, from, to } = __sp;
+  const pg = paging(__sp);
   const db = await supabase();
-  let q = db.from("invoices").select("id, no, day, due_date, currency, cancelled, customer:customers(name), order:work_orders(no)").order("no", { ascending: false }).limit(500);
+  let q = db.from("invoices").select("id, no, day, due_date, currency, cancelled, customer:customers(name), order:work_orders(no)").order("no", { ascending: false }).range(pg.from, pg.to);
   if (from) q = q.gte("day", from);
   if (to) q = q.lte("day", to);
-  const { data: invoices } = await q;
+  const { data: invoicesAll } = await q;
+  const { rows: invoices, more } = cut(invoicesAll);
   const ids = (invoices ?? []).map((i) => i.id);
   const { data: tot } = ids.length ? await db.from("invoice_totals").select("invoice_id, total, paid, balance").in("invoice_id", ids) : { data: [] };
   const t = new Map((tot ?? []).map((x) => [x.invoice_id, x]));
@@ -57,6 +61,7 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
           </table>
         </div>
       )}
+      <Pager page={pg.page} more={more} sp={__sp} path="/sales/invoices" />
     </>
   );
 }

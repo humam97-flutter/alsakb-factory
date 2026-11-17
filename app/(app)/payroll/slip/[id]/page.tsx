@@ -1,3 +1,5 @@
+import { Letterhead, Signatures } from "@/components/letterhead";
+import { getBrand } from "@/lib/brand";
 import { notFound } from "next/navigation";
 import { PrintButton } from "@/components/print-button";
 import type { IdPageProps } from "@/components/ui";
@@ -15,12 +17,12 @@ export default async function SlipPage({ params, searchParams }: IdPageProps) {
   const first = `${month}-01`;
   const next = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 1)).toISOString().slice(0, 10);
   const db = await supabase();
-  const [{ data: w }, { data: r }, { data: pays }, { data: att }, { data: s }] = await Promise.all([
+  const [{ data: w }, { data: r }, { data: pays }, { data: att }, brand] = await Promise.all([
     db.from("workers").select("id, full_name, job, phone").eq("id", id).maybeSingle(),
     db.from("monthly_payroll").select("*").eq("worker_id", id).eq("month", first).maybeSingle(),
     db.from("worker_payments").select("*").eq("worker_id", id).gte("day", first).lt("day", next).order("day"),
     db.from("attendance").select("status").eq("worker_id", id).gte("day", first).lt("day", next),
-    db.from("settings").select("factory_name").eq("id", 1).maybeSingle(),
+    getBrand(),
   ]);
   if (!w) notFound();
   const cur = r?.currency ?? "IQD";
@@ -35,19 +37,16 @@ export default async function SlipPage({ params, searchParams }: IdPageProps) {
     ["السلف", money(r?.advance, cur)],
     ["المدفوع", money(r?.paid, cur)],
   ];
-  const msg = `${s?.factory_name ?? "معمل السكب الحديدي"}\nكشف راتب ${w.full_name} لشهر ${month}\n` + lines.map(([k, v]) => `${k}: ${v}`).join("\n") + `\nالباقي لك: ${money(r?.balance, cur)}`;
+  const msg = `${brand.name}\nكشف راتب ${w.full_name} لشهر ${month}\n` + lines.map(([k, v]) => `${k}: ${v}`).join("\n") + `\nالباقي لك: ${money(r?.balance, cur)}`;
   return (
-    <div style={{ background: "#fff", color: "#000", padding: 24, borderRadius: 8, maxWidth: 640 }}>
-      <div className="noprint actions" style={{ marginTop: 0, marginBottom: 12 }}>
+    <div className="paper" style={{ maxWidth: 720 }}>
+      <div className="noprint actions" style={{ marginTop: 0, marginBottom: 12, paddingTop: 0, borderTop: 0 }}>
         <PrintButton />
         <a className="btn ghost" target="_blank" rel="noopener" href={waLink(w.phone, msg)}>إرسال للعامل بالواتساب</a>
       </div>
-      <div className="row between" style={{ borderBottom: "3px solid #000", paddingBottom: 8, marginBottom: 12 }}>
-        <div><h2 style={{ margin: 0 }}>كشف راتب</h2><div>{s?.factory_name ?? "معمل السكب الحديدي"}</div></div>
-        <div style={{ textAlign: "end" }}><b>{w.full_name}</b>{w.job && <div>{w.job}</div>}<div className="num">{month}</div></div>
-      </div>
+      <Letterhead brand={brand} title="كشف راتب" info={[["الشهر", month], ["العامل", w.full_name], ["العمل", w.job]]} />
       <p style={{ fontSize: 13 }}>حاضر {count("present")} · نصف يوم {count("half")} · غائب {count("absent")} · إجازة {count("leave")}</p>
-      <table style={{ border: "1px solid #999" }}>
+      <table>
         <tbody>
           {lines.map(([k, v]) => <tr key={k}><td>{k}</td><td className="n num">{v}</td></tr>)}
           <tr><td><b>الباقي له</b></td><td className="n num"><b>{money(r?.balance, cur)}</b></td></tr>
@@ -56,16 +55,14 @@ export default async function SlipPage({ params, searchParams }: IdPageProps) {
       {pays && pays.length > 0 && (
         <>
           <h3 style={{ marginBottom: 6 }}>الدفعات</h3>
-          <table style={{ border: "1px solid #999" }}>
+          <table>
             <tbody>
               {pays.map((p) => <tr key={p.id}><td className="num">{p.day}</td><td>{PAYMENT[p.kind]?.label}</td><td>{p.note}</td><td className="n num">{money(p.amount, p.currency)}</td></tr>)}
             </tbody>
           </table>
         </>
       )}
-      <div className="row" style={{ marginTop: 48, gap: 24 }}>
-        {["المحاسب", "توقيع العامل"].map((x) => <div key={x} style={{ flex: 1, borderTop: "1px solid #000", paddingTop: 6, textAlign: "center" }}>{x}</div>)}
-      </div>
+      <Signatures names={["المحاسب", "المدير", "توقيع العامل"]} manager={brand.manager_name} />
     </div>
   );
 }

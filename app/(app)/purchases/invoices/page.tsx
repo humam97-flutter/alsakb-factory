@@ -1,3 +1,4 @@
+import { cut, Pager, paging } from "@/components/pager";
 import Link from "next/link";
 import { Alert, type PageProps } from "@/components/ui";
 import { can, requireRole } from "@/lib/auth";
@@ -6,12 +7,15 @@ import { supabase } from "@/lib/supabase/server";
 
 export default async function PurchaseInvoicesPage({ searchParams }: PageProps) {
   await requireRole(can.finance);
-  const { open, from, to, error } = await searchParams;
+  const __sp = await searchParams;
+  const { open, from, to, error } = __sp;
+  const pg = paging(__sp);
   const db = await supabase();
-  let q = db.from("purchase_invoices").select("id, no, day, due_date, currency, supplier_ref, received_at, supplier:suppliers(name)").order("no", { ascending: false }).limit(500);
+  let q = db.from("purchase_invoices").select("id, no, day, due_date, currency, supplier_ref, received_at, supplier:suppliers(name)").order("no", { ascending: false }).range(pg.from, pg.to);
   if (from) q = q.gte("day", from);
   if (to) q = q.lte("day", to);
-  const { data: invoices } = await q;
+  const { data: invoicesAll } = await q;
+  const { rows: invoices, more } = cut(invoicesAll);
   const ids = (invoices ?? []).map((i) => i.id);
   const { data: tot } = ids.length ? await db.from("purchase_totals").select("*").in("invoice_id", ids) : { data: [] };
   const t = new Map((tot ?? []).map((x) => [x.invoice_id, x]));
@@ -59,6 +63,7 @@ export default async function PurchaseInvoicesPage({ searchParams }: PageProps) 
           </table>
         </div>
       )}
+      <Pager page={pg.page} more={more} sp={__sp} path="/purchases/invoices" />
     </>
   );
 }

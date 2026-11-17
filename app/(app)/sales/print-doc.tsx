@@ -1,10 +1,12 @@
 import { PrintButton } from "@/components/print-button";
+import { Letterhead, Signatures } from "@/components/letterhead";
+import { getBrand } from "@/lib/brand";
 import { money, num } from "@/lib/labels";
 
 type Line = { id: string; description: string; qty: number; unit: string | null; unit_price: number };
 
 // ورقة عرض السعر أو الفاتورة بشعار المعمل
-export function PrintDoc({
+export async function PrintDoc({
   title,
   no,
   day,
@@ -17,7 +19,6 @@ export function PrintDoc({
   total,
   paid,
   notes,
-  settings,
 }: {
   title: string;
   no: number;
@@ -31,28 +32,13 @@ export function PrintDoc({
   total: number;
   paid?: number;
   notes?: string | null;
-  settings: { factory_name: string; address: string | null; phone: string | null; invoice_footer: string | null } | null;
+  settings?: unknown;
 }) {
-  const th = { color: "#000", background: "#eee" };
+  const brand = await getBrand();
   return (
-    <div style={{ background: "#fff", color: "#000", padding: 24, borderRadius: 8 }}>
-      <div className="noprint actions" style={{ marginTop: 0, marginBottom: 16 }}><PrintButton /></div>
-      <div className="row between" style={{ borderBottom: "3px solid #000", paddingBottom: 8, marginBottom: 16, alignItems: "flex-start" }}>
-        <div className="row" style={{ gap: 12 }}>
-          <div className="logo" aria-hidden="true" style={{ width: 44, height: 44 }} />
-          <div>
-            <h2 style={{ margin: 0, fontSize: 22 }}>{settings?.factory_name ?? "معمل السكب الحديدي"}</h2>
-            {settings?.address && <div style={{ fontSize: 13 }}>{settings.address}</div>}
-            {settings?.phone && <div style={{ fontSize: 13 }} className="num">{settings.phone}</div>}
-          </div>
-        </div>
-        <div style={{ textAlign: "end" }}>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{title}</div>
-          <div>الرقم: <span className="num">{no}</span></div>
-          <div>التاريخ: <span className="num">{day}</span></div>
-          {(extra ?? []).filter(([, v]) => v).map(([l, v]) => <div key={l}>{l}: <span className="num">{v}</span></div>)}
-        </div>
-      </div>
+    <div className="paper">
+      <div className="noprint actions" style={{ marginTop: 0, marginBottom: 16, paddingTop: 0, borderTop: 0 }}><PrintButton /></div>
+      <Letterhead brand={brand} title={title} info={[["الرقم", no], ["التاريخ", day], ...(extra ?? [])]} />
       {customer && (
         <p style={{ marginTop: 0 }}>
           السيد / <b>{customer.name}</b> المحترم
@@ -60,9 +46,9 @@ export function PrintDoc({
           {customer.address && <> · {customer.address}</>}
         </p>
       )}
-      <table style={{ border: "1px solid #999" }}>
+      <table>
         <thead>
-          <tr><th style={th}>#</th><th style={th}>الوصف</th><th style={{ ...th, textAlign: "end" }}>الكمية</th><th style={th}>الوحدة</th><th style={{ ...th, textAlign: "end" }}>السعر</th><th style={{ ...th, textAlign: "end" }}>المبلغ</th></tr>
+          <tr><th>#</th><th>الوصف</th><th className="n">الكمية</th><th>الوحدة</th><th className="n">السعر</th><th className="n">المبلغ</th></tr>
         </thead>
         <tbody>
           {lines.map((l, i) => (
@@ -93,12 +79,8 @@ export function PrintDoc({
         </tfoot>
       </table>
       {notes && <div style={{ whiteSpace: "pre-wrap", marginTop: 14, border: "1px solid #999", padding: 8 }}>{notes}</div>}
-      <div className="row" style={{ marginTop: 48, gap: 24 }}>
-        {["المحاسب", "المدير", "المستلم"].map((s) => (
-          <div key={s} style={{ flex: 1, borderTop: "1px solid #000", paddingTop: 6, textAlign: "center" }}>{s}</div>
-        ))}
-      </div>
-      {settings?.invoice_footer && <p style={{ marginTop: 24, fontSize: 12, textAlign: "center", whiteSpace: "pre-wrap" }}>{settings.invoice_footer}</p>}
+      <Signatures names={["المحاسب", "المدير", "المستلم"]} manager={brand.manager_name} />
+      {brand.footer && <div className="paper-foot">{brand.footer}</div>}
     </div>
   );
 }

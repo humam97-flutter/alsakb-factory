@@ -48,7 +48,22 @@ export function PageTitle({ groups }: { groups: NavGroup[] }) {
   const all = groups.flatMap((g) => g.items);
   const hit = all.filter((i) => isActive(path, i.href)).sort((a, b) => b.href.length - a.href.length)[0];
   const extra: Record<string, string> = { "/alerts": "التنبيهات" };
-  return <div className="crumb">{hit?.label ?? extra[path] ?? ""}</div>;
+  // بصفحات التفاصيل (سجل واحد، جديد، تعديل، طباعة) نطلع زر رجوع للقائمة
+  const parts = path.split("/").filter(Boolean);
+  const deep = parts.length >= 2 && parts.slice(1).some((p) => /^[0-9a-f-]{20,}$/.test(p) || ["new", "edit", "print"].includes(p));
+  const idIdx = parts.findIndex((p, i) => i > 0 && (/^[0-9a-f-]{20,}$/.test(p) || p === "new"));
+  const last = parts[parts.length - 1];
+  const parent = "/" + parts.slice(0, ["edit", "print"].includes(last) || idIdx < 1 ? parts.length - 1 : idIdx).join("/");
+  return (
+    <div className="crumb row" style={{ gap: 10, flexWrap: "nowrap" }}>
+      {deep && (
+        <Link href={parent} className="back" aria-label="رجوع" title="رجوع">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+        </Link>
+      )}
+      <span>{hit?.label ?? extra[path] ?? ""}</span>
+    </div>
+  );
 }
 
 // تبويبات داخل القسم (المبيعات، المشتريات...)

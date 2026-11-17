@@ -1,14 +1,18 @@
+import { cut, Pager, paging } from "@/components/pager";
 import Link from "next/link";
 import { Alert, Pill, type PageProps } from "@/components/ui";
 import { money, QUOTE_STATUS } from "@/lib/labels";
 import { supabase } from "@/lib/supabase/server";
 
 export default async function QuotesPage({ searchParams }: PageProps) {
-  const { status, error } = await searchParams;
+  const __sp = await searchParams;
+  const { status, error } = __sp;
+  const pg = paging(__sp);
   const db = await supabase();
-  let q = db.from("quotes").select("id, no, day, valid_until, status, currency, order_id, customer:customers(name)").order("no", { ascending: false }).limit(300);
+  let q = db.from("quotes").select("id, no, day, valid_until, status, currency, order_id, customer:customers(name)").order("no", { ascending: false }).range(pg.from, pg.to);
   if (status) q = q.eq("status", status);
-  const { data: quotes } = await q;
+  const { data: quotesAll } = await q;
+  const { rows: quotes, more } = cut(quotesAll);
   const ids = (quotes ?? []).map((x) => x.id);
   const { data: tot } = ids.length ? await db.from("quote_totals").select("quote_id, total").in("quote_id", ids) : { data: [] };
   const total = new Map((tot ?? []).map((t) => [t.quote_id, Number(t.total)]));
@@ -45,6 +49,7 @@ export default async function QuotesPage({ searchParams }: PageProps) {
           </table>
         </div>
       )}
+      <Pager page={pg.page} more={more} sp={__sp} path="/sales/quotes" />
     </>
   );
 }
