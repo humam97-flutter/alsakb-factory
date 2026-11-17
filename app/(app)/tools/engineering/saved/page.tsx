@@ -42,12 +42,17 @@ export default async function SavedPage({ searchParams }: PageProps) {
                     <td>{o ? <Link href={`/orders/${o.id}`}>#{o.no} {o.product}</Link> : ""}</td>
                     <td className="meta">{sum}</td>
                     <td>
+                      <div className="row" style={{ gap: 4 }}>
+                      {can.finance(me.role) && (c.kind === "vessel" || c.kind === "tank") && (
+                        <Link className="btn ghost sm" href={`/sales/estimates/new?calc=${c.id}&title=${encodeURIComponent(c.title)}`}>سعّره</Link>
+                      )}
                       {can.production(me.role) && (
                         <form action={deleteCalc}>
                           <input type="hidden" name="id" value={c.id} />
                           <button className="btn ghost sm" type="submit" aria-label="حذف">×</button>
                         </form>
                       )}
+                      </div>
                     </td>
                   </tr>
                 );

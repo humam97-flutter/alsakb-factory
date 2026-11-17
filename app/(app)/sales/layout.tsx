@@ -9,6 +9,7 @@ export default async function SalesLayout({ children }: { children: React.ReactN
         <Nav
           items={[
             { href: "/sales/customers", label: "الزبائن" },
+            { href: "/sales/estimates", label: "التسعير التقديري" },
             { href: "/sales/quotes", label: "عروض الأسعار" },
             { href: "/sales/invoices", label: "الفواتير" },
             { href: "/sales/payments", label: "المقبوضات" },
