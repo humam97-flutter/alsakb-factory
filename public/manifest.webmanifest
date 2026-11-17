@@ -1,0 +1,11 @@
+{
+  "name": "معمل السكب الحديدي",
+  "short_name": "السكب الحديدي",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#eef1f4",
+  "theme_color": "#2c4157",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
