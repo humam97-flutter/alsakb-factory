@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { dbError, fail, numOr0, numOrNull, str } from "@/lib/form";
 import { ensureCustomer } from "@/lib/customers";
 import { supabase } from "@/lib/supabase/server";
+import { partsFor } from "../tools/engineering/inputs";
 
 // ---------- الزبائن ----------
 export async function saveCustomer(form: FormData) {
@@ -93,6 +94,19 @@ export async function quoteToOrder(form: FormData) {
   if (error) fail(back, dbError(error));
   await db.from("work_order_finance").upsert({ order_id: o.id, price: tot?.total ?? null, currency: q.currency });
   await db.from("quotes").update({ order_id: o.id, status: "accepted" }).eq("id", id);
+  // إذا العرض جاي من تقدير: نربطه بالأمر حتى نقارن المقدّر بالفعلي، ونضيف قطع القص من الحساب الهندسي
+  const { data: est } = await db.from("estimates").select("id, qty, calc_id").eq("quote_id", id).maybeSingle();
+  if (est) {
+    await db.from("estimates").update({ order_id: o.id, status: "won" }).eq("id", est.id);
+    if (est.calc_id) {
+      const { data: c } = await db.from("calcs").select("kind, inputs, order_id").eq("id", est.calc_id).maybeSingle();
+      if (c) {
+        if (!c.order_id) await db.from("calcs").update({ order_id: o.id }).eq("id", est.calc_id);
+        const parts = partsFor(c.kind, (c.inputs ?? {}) as Record<string, string>);
+        if (parts.length) await db.from("cut_parts").insert(parts.map((p) => ({ ...p, qty: p.qty * est.qty, order_id: o.id })));
+      }
+    }
+  }
   revalidatePath("/orders");
   redirect(`/orders/${o.id}`);
 }

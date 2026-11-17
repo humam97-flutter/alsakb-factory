@@ -1,4 +1,4 @@
-import { API650_MATERIALS, ASME_MATERIALS, BAR, JOINT_E, type HeadType, type TankIn, type VesselIn } from "@/lib/engineering";
+import { API650_MATERIALS, api650, ASME_MATERIALS, BAR, JOINT_E, vessel, type HeadType, type TankIn, type VesselIn } from "@/lib/engineering";
 
 type SP = Record<string, string | undefined>;
 const n = (sp: SP, k: string, d: number) => {
@@ -59,4 +59,26 @@ export function pick(sp: SP, def: Record<string, unknown>) {
   const o: Record<string, string> = {};
   for (const k of Object.keys(def)) if (sp[k] !== undefined && sp[k] !== "") o[k] = String(sp[k]);
   return o;
+}
+
+// قطع القص (ألواح الجسم وأقراص الرؤوس أو ألواح الحلقات) من مدخلات حساب محفوظ
+export function partsFor(kind: string, raw: SP) {
+  if (kind === "vessel") {
+    const { inp, mat } = vesselInput(raw);
+    const r = vessel(inp);
+    const grade = ASME_MATERIALS[mat]?.grade ?? "A516 Gr70";
+    return [
+      ...r.shellPlates.map((c) => ({ name: `Shell C${c.course}`, shape: "rect", grade, thickness: r.tShell, length_mm: Math.round(Math.max(c.l, c.w)), width_mm: Math.round(Math.min(c.l, c.w)), qty: c.n })),
+      inp.head === "flat"
+        ? { name: "Flat head", shape: "circle", grade, thickness: r.tHead, diameter_mm: Math.round(r.OD), qty: 2 }
+        : { name: "Head blank", shape: "circle", grade, thickness: r.tHead, diameter_mm: r.blank, qty: 2 },
+    ];
+  }
+  if (kind === "tank") {
+    const { inp, mat } = tankInput(raw);
+    const r = api650(inp);
+    const grade = API650_MATERIALS[mat]?.grade ?? "A36";
+    return r.courses.map((c) => ({ name: `Course ${c.course}`, shape: "rect", grade, thickness: c.t, length_mm: Math.round(Math.max(r.pieceL, c.w)), width_mm: Math.round(Math.min(r.pieceL, c.w)), qty: r.perCourse }));
+  }
+  return [];
 }

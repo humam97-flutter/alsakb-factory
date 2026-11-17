@@ -27,6 +27,8 @@ export default async function OrderPage({ params, searchParams }: IdPageProps) {
   ]);
   const { data: cuts } = await db.from("cut_plans").select("material_cost").eq("order_id", id).eq("status", "done");
   const plateCost = (cuts ?? []).reduce((a, c) => a + Number(c.material_cost), 0);
+  const { data: est } = can.finance(me.role) ? await db.from("estimates").select("id, no").eq("order_id", id).maybeSingle() : { data: null };
+  const { data: estT } = est ? await db.from("estimate_totals").select("direct").eq("estimate_id", est.id).maybeSingle() : { data: null };
   const wName = new Map((workers ?? []).map((w) => [w.id, w.full_name]));
   if (!o) notFound();
   const mName = new Map((machines ?? []).map((m) => [m.id, m.name]));
@@ -230,6 +232,14 @@ export default async function OrderPage({ params, searchParams }: IdPageProps) {
                   <tr><td>كهرباء وتشغيل (يدوي)</td><td className="n num">{money(cost.cost_machine, cur)}</td></tr>
                   <tr><td>كلف أخرى</td><td className="n num">{money(cost.cost_other, cur)}</td></tr>
                   <tr><td><b>مجموع الكلفة</b></td><td className="n num"><b>{money(cost.cost_total, cur)}</b></td></tr>
+                  {est && estT && (
+                    <tr>
+                      <td className="meta">المقدّر بـ<Link href={`/sales/estimates/${est.id}`}>التقدير #{est.no}</Link></td>
+                      <td className={`n num ${Number(cost.cost_total) > Number(estT.direct) ? "neg" : "meta"}`}>
+                        {money(estT.direct, cur)} ({Number(estT.direct) ? `${Number(cost.cost_total) >= Number(estT.direct) ? "+" : ""}${(((Number(cost.cost_total) - Number(estT.direct)) / Number(estT.direct)) * 100).toFixed(0)}%` : ""})
+                      </td>
+                    </tr>
+                  )}
                   <tr><td>سعر البيع</td><td className="n num">{money(cost.price, cur)}</td></tr>
                   {profit !== null && (
                     <>
