@@ -6,7 +6,7 @@ import { addOrderFiles, deleteOrderFile } from "../actions";
 // الرسومات وصور الشغل: الصور تطلع مصغرة، والباقي روابط
 export async function OrderFiles({ orderId, canEdit }: { orderId: string; canEdit: boolean }) {
   const db = await supabase();
-  const { data: files } = await db.from("order_files").select("*").eq("order_id", orderId).order("created_at");
+  const { data: files } = await db.from("order_files").select("*").eq("order_id", orderId).eq("category", "general").order("created_at");
   const images = (files ?? []).filter((f) => f.mime?.startsWith("image/"));
   const signed = images.length
     ? (await db.storage.from("orders").createSignedUrls(images.map((f) => f.path), 3600)).data ?? []

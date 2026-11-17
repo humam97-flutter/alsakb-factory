@@ -86,5 +86,25 @@ export const getAlerts = cache(async (me: Me): Promise<AlertItem[]> => {
       }
     }
   }
+  // الجودة: مؤهلات لحام تنتهي، حالات عدم مطابقة مفتوحة، لحامات تحتاج تصليح
+  if (can.production(r)) {
+    const [{ data: qs }, { data: nc }, { data: rep }] = await Promise.all([
+      db.from("welder_quals").select("id, process, expires_on, worker:workers(full_name)").lte("expires_on", addDays(t, 30)).gte("expires_on", addDays(t, -60)),
+      db.from("ncrs").select("id").eq("status", "open"),
+      db.from("welds").select("order_id, code, order:work_orders(no)").eq("status", "repair"),
+    ]);
+    for (const q of qs ?? []) {
+      const w = q.worker as unknown as { full_name: string };
+      out.push({ level: q.expires_on! < t ? "bad" : "warn", group: "الجودة", text: `مؤهل ${w?.full_name} (${q.process}) ${q.expires_on! < t ? "انتهى" : "ينتهي"} ${q.expires_on}`, href: "/quality" });
+    }
+    if (nc?.length) out.push({ level: "warn", group: "الجودة", text: `${nc.length} حالة عدم مطابقة مفتوحة`, href: "/quality/ncr" });
+    const byOrder = new Map<string, { no: number; codes: string[] }>();
+    for (const w of rep ?? []) {
+      const e = byOrder.get(w.order_id) ?? { no: (w.order as unknown as { no: number })?.no, codes: [] };
+      e.codes.push(w.code);
+      byOrder.set(w.order_id, e);
+    }
+    for (const [oid, e] of byOrder) out.push({ level: "bad", group: "الجودة", text: `أمر #${e.no}: لحامات تحتاج تصليح ${e.codes.join("، ")}`, href: `/orders/${oid}/qa` });
+  }
   return out.sort((a, b) => (a.level === b.level ? 0 : a.level === "bad" ? -1 : 1));
 });

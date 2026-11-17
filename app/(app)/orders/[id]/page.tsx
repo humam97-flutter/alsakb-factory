@@ -69,6 +69,9 @@ export default async function OrderPage({ params, searchParams }: IdPageProps) {
             صرف مواد لهذا الأمر
           </Link>
         )}
+        <Link className="btn ghost" href={`/orders/${o.id}/qa`}>
+          الجودة واللحام
+        </Link>
         <Link className="btn ghost" href={`/orders/${o.id}/print`}>
           ورقة الشغل للطباعة
         </Link>
