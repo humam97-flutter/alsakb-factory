@@ -7,9 +7,10 @@ export default async function NewOrderPage({ searchParams }: PageProps) {
   const me = await requireRole(can.production);
   const { error } = await searchParams;
   const db = await supabase();
-  const [{ data: workers }, { data: machines }] = await Promise.all([
+  const [{ data: workers }, { data: machines }, { data: customers }] = await Promise.all([
     db.from("workers").select("id, full_name").eq("active", true).order("full_name"),
     db.from("machines").select("id, code, name").order("code"),
+    db.from("customers").select("name").eq("active", true).order("name"),
   ]);
   return (
     <>
@@ -23,6 +24,7 @@ export default async function NewOrderPage({ searchParams }: PageProps) {
         showFinance={can.finance(me.role)}
         workers={workers ?? []}
         machines={(machines ?? []).sort((a, b) => Number(a.code) - Number(b.code))}
+        customers={(customers ?? []).map((c) => c.name)}
       />
     </>
   );

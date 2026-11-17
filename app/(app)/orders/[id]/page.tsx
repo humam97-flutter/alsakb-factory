@@ -5,6 +5,7 @@ import { can, getMe } from "@/lib/auth";
 import { money, num, ORDER_STATUS, PRIORITY, STAGE_STATUS, today } from "@/lib/labels";
 import { supabase } from "@/lib/supabase/server";
 import { addStage, deleteStage, setStage } from "../actions";
+import { invoiceFrom } from "../../sales/actions";
 import { OrderFiles } from "./files";
 import { waLink } from "@/lib/share";
 
@@ -75,6 +76,12 @@ export default async function OrderPage({ params, searchParams }: IdPageProps) {
         >
           إرسال الحالة بالواتساب
         </a>
+        {can.finance(me.role) && (
+          <form action={invoiceFrom}>
+            <input type="hidden" name="order_id" value={o.id} />
+            <button className="btn ghost" type="submit">إصدار فاتورة</button>
+          </form>
+        )}
       </div>
 
       <div className="panel kv">

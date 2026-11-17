@@ -15,7 +15,7 @@ export default async function Dashboard({ searchParams }: PageProps) {
     db.from("materials").select("id, name, qty, min_qty, unit, unit_price, currency"),
     db.from("maintenance").select("id").neq("state", "done"),
     can.attendance(me.role) ? db.from("attendance").select("status").eq("day", t) : Promise.resolve({ data: null }),
-    can.finance(me.role) ? db.from("work_order_costs").select("price, paid, currency") : Promise.resolve({ data: null }),
+    can.finance(me.role) ? db.from("customer_balances").select("balance, currency") : Promise.resolve({ data: null }),
     can.docs(me.role)
       ? db.from("documents").select("status, due_date, expires_on").neq("status", "archived")
           .or(`status.eq.pending,expires_on.lte.${addDays(t, 30)}`)
@@ -30,8 +30,9 @@ export default async function Dashboard({ searchParams }: PageProps) {
   const due = (machines ?? []).filter((m) => m.next_service && m.next_service <= t && m.status === "running");
   const low = (materials ?? []).filter((m) => m.min_qty !== null && Number(m.qty) <= Number(m.min_qty));
   const present = (att.data ?? []).filter((a) => a.status === "present" || a.status === "half").length;
-  const debtIqd = (fin.data ?? []).filter((f) => f.currency === "IQD" && f.price != null).reduce((a, f) => a + Math.max(0, Number(f.price) - Number(f.paid)), 0);
-  const debtUsd = (fin.data ?? []).filter((f) => f.currency === "USD" && f.price != null).reduce((a, f) => a + Math.max(0, Number(f.price) - Number(f.paid)), 0);
+  const debtIqd = (fin.data ?? []).filter((f) => f.currency === "IQD").reduce((a, f) => a + Math.max(0, Number(f.balance)), 0);
+  const debtUsd = (fin.data ?? []).filter((f) => f.currency === "USD").reduce((a, f) => a + Math.max(0, Number(f.balance)), 0);
+  const dueSoon = o.filter((x) => x.due_date && x.due_date >= t && x.due_date <= addDays(t, 3) && !["done"].includes(x.status));
 
   const kpi = (n: React.ReactNode, label: string, href: string, tone?: string) => (
     <Link className="kpi" href={href}>
@@ -50,10 +51,11 @@ export default async function Dashboard({ searchParams }: PageProps) {
         {kpi(low.length, "مواد تحت حد الطلب", "/stock", low.length ? "tone-bad" : "")}
         {kpi(maint?.length ?? 0, "صيانات مفتوحة", "/maintenance", maint?.length ? "tone-warn" : "")}
         {att.data && kpi(present, "عمال حاضرون اليوم", "/workers", present ? "tone-ok" : "")}
-        {fin.data && kpi(money(debtIqd), "ديون عند الزبائن", "/orders", debtIqd ? "tone-warn" : "")}
+        {fin.data && kpi(money(debtIqd), "ديون عند الزبائن", "/sales/customers?debt=1", debtIqd ? "tone-warn" : "")}
         {docs.data && kpi(docsPending, "كتب بانتظار إجراء", "/documents?status=pending", docsPending ? "tone-warn" : "")}
         {docs.data && docsExpiring > 0 && kpi(docsExpiring, "عقود ومستندات تنتهي خلال شهر", "/documents", "tone-bad")}
-        {fin.data && debtUsd > 0 && kpi(money(debtUsd, "USD"), "ديون بالدولار", "/orders", "tone-warn")}
+        {fin.data && debtUsd > 0 && kpi(money(debtUsd, "USD"), "ديون بالدولار", "/sales/customers?debt=1", "tone-warn")}
+        {kpi(dueSoon.length, "تسليم خلال 3 أيام", "/orders", dueSoon.length ? "tone-warn" : "")}
       </div>
 
       {late.length > 0 && (

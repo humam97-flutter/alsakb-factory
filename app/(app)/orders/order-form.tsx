@@ -13,19 +13,24 @@ export function OrderForm({
   showFinance,
   workers,
   machines,
+  customers,
 }: {
   order: Order;
   finance: Record<string, any> | null;
   showFinance: boolean;
   workers: { id: string; full_name: string }[];
   machines: { id: string; code: string; name: string }[];
+  customers?: string[];
 }) {
   return (
     <form action={saveOrder} className="panel">
       {order && <input type="hidden" name="id" value={order.id} />}
       <div className="fields">
         <Input name="product" label="المنتج" value={order?.product} full required />
-        <Input name="client" label="الزبون" value={order?.client} />
+        <Input name="client" label="الزبون" value={order?.client} list="customers-list" />
+        <datalist id="customers-list">
+          {(customers ?? []).map((c) => <option key={c} value={c} />)}
+        </datalist>
         <Input name="client_phone" label="هاتف الزبون" value={order?.client_phone} type="tel" />
         <Input name="qty" label="الكمية" value={order?.qty} type="number" />
         <Select name="unit" label="الوحدة" options={UNITS} value={order?.unit} />
