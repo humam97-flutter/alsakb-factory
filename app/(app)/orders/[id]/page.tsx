@@ -1,3 +1,4 @@
+import { weightProgress } from "@/lib/planning";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Alert, Pill, type IdPageProps } from "@/components/ui";
@@ -69,6 +70,9 @@ export default async function OrderPage({ params, searchParams }: IdPageProps) {
             صرف مواد لهذا الأمر
           </Link>
         )}
+        <Link className="btn ghost" href={`/production/plan/${o.id}`}>
+          خطة الإنتاج
+        </Link>
         <Link className="btn ghost" href={`/orders/${o.id}/qa`}>
           الجودة واللحام
         </Link>
@@ -114,7 +118,7 @@ export default async function OrderPage({ params, searchParams }: IdPageProps) {
 
       <OrderFiles orderId={o.id} canEdit={can.production(me.role)} />
 
-      <h3 className="sec">مراحل العمل</h3>
+      <h3 className="sec">مراحل العمل <span className="meta num">· الإنجاز بالوزن {weightProgress(stages ?? [])}%</span></h3>
       <div className="panel">
         <ol className="stages">
           {(stages ?? []).map((s) => (

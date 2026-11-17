@@ -106,5 +106,16 @@ export const getAlerts = cache(async (me: Me): Promise<AlertItem[]> => {
     }
     for (const [oid, e] of byOrder) out.push({ level: "bad", group: "الجودة", text: `أمر #${e.no}: لحامات تحتاج تصليح ${e.codes.join("، ")}`, href: `/orders/${oid}/qa` });
   }
+  // التخطيط: مراحل خلص وقتها المخطط وما خلصت
+  if (can.production(r)) {
+    const { data: behind } = await db.from("work_order_stages").select("order_id, name, plan_end, order:work_orders!inner(no, status)").neq("status", "done").lt("plan_end", t).in("order.status", ["new", "in_progress"]);
+    const byOrder = new Map<string, { no: number; names: string[] }>();
+    for (const s of behind ?? []) {
+      const e = byOrder.get(s.order_id) ?? { no: (s.order as unknown as { no: number })?.no, names: [] };
+      e.names.push(s.name);
+      byOrder.set(s.order_id, e);
+    }
+    for (const [oid, e] of byOrder) out.push({ level: "warn", group: "التخطيط", text: `أمر #${e.no}: متأخر عن الخطة (${e.names.join("، ")})`, href: `/production/plan/${oid}` });
+  }
   return out.sort((a, b) => (a.level === b.level ? 0 : a.level === "bad" ? -1 : 1));
 });

@@ -313,3 +313,40 @@ details > summary.btn::-webkit-details-marker { display: none; }
 .db .empty { color: #777; font-size: 12.5px; }
 @media (max-width: 700px) { .db .two { grid-template-columns: 1fr; } .db .toc { columns: 1; } }
 @media print { .db .brk { break-before: page; } .db tr { break-inside: avoid; } }
+
+/* المخطط الزمني Gantt */
+.gantt { border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); overflow-x: auto; }
+.g-row { display: grid; grid-template-columns: 210px minmax(560px, 1fr); border-bottom: 1px solid var(--line-2); min-height: 40px; }
+.g-row:last-child { border-bottom: 0; }
+.g-head { min-height: 34px; position: sticky; top: 0; background: var(--panel); z-index: 2; }
+.g-label { padding: 7px 10px; font-size: 13px; border-inline-end: 1px solid var(--line-2); min-width: 0; }
+.g-label a { font-weight: 600; text-decoration: none; color: var(--ink); }
+.g-label .meta { font-size: 11.5px; }
+.g-track { position: relative; }
+.g-tick { position: absolute; top: 4px; font-size: 11px; color: var(--muted); transform: translateX(50%); white-space: nowrap; display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
+.g-tick b { color: var(--ink); font-weight: 600; font-size: 11px; }
+.g-off { position: absolute; top: 0; bottom: 0; background: var(--chip); opacity: .6; }
+.g-today { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--info); z-index: 1; }
+.g-due { position: absolute; top: 4px; bottom: 4px; width: 0; border-inline-start: 2px dashed var(--bad); z-index: 1; }
+.g-bar { position: absolute; top: 10px; height: 20px; border-radius: 4px; background: color-mix(in srgb, var(--c) 28%, var(--panel)); border: 1px solid var(--c); overflow: hidden; z-index: 1; box-shadow: 0 0 0 2px var(--panel); }
+.g-bar i { position: absolute; inset-block: 0; inset-inline-start: 0; background: var(--c); }
+.g-bar.done { border-style: solid; }
+.g-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; margin: 8px 0; }
+.g-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.g-legend i { width: 12px; height: 12px; border-radius: 3px; background: var(--c); display: inline-block; }
+.prog { height: 6px; background: var(--chip); border-radius: 99px; overflow: hidden; min-width: 60px; }
+.prog i { display: block; height: 100%; background: var(--ok); border-radius: 99px; }
+
+/* شاشة الورشة للتابلت */
+.floor-tabs { margin-bottom: 12px; }
+.floor-tabs a { background: var(--chip); padding: 8px 14px; border-radius: 999px; color: var(--ink); text-decoration: none; font-size: 14px; border-inline-start: 4px solid var(--c, var(--muted)); }
+.floor-tabs a.on { background: var(--info-bg); font-weight: 700; }
+.floor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.floor-card { background: var(--panel); border: 1px solid var(--line); border-inline-start: 6px solid var(--c); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+.fc-product { font-size: 15px; font-weight: 600; }
+.fc-stage { font-size: 20px; font-weight: 700; }
+.fc-prog { display: flex; align-items: center; gap: 10px; }
+.fc-prog .prog { flex: 1; height: 10px; }
+.fc-btns { display: flex; gap: 8px; margin-top: 6px; }
+.fc-btns form { flex: 1; }
+.fc-btns .btn { width: 100%; min-height: 52px; font-size: 17px; justify-content: center; }
