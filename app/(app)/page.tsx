@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Alert, Pill, type PageProps } from "@/components/ui";
 import { can, getMe } from "@/lib/auth";
-import { MACHINE_STATUS, money, num, ORDER_STATUS, today } from "@/lib/labels";
+import { addDays, MACHINE_STATUS, money, num, ORDER_STATUS, today } from "@/lib/labels";
 import { supabase } from "@/lib/supabase/server";
 
 export default async function Dashboard({ searchParams }: PageProps) {
@@ -9,14 +9,20 @@ export default async function Dashboard({ searchParams }: PageProps) {
   const me = await getMe();
   const db = await supabase();
   const t = today();
-  const [{ data: orders }, { data: machines }, { data: materials }, { data: maint }, att, fin] = await Promise.all([
+  const [{ data: orders }, { data: machines }, { data: materials }, { data: maint }, att, fin, docs] = await Promise.all([
     db.from("work_orders").select("id, no, product, client, status, due_date").not("status", "in", "(delivered,cancelled)"),
     db.from("machines").select("id, code, name, status, next_service"),
     db.from("materials").select("id, name, qty, min_qty, unit, unit_price, currency"),
     db.from("maintenance").select("id").neq("state", "done"),
     can.attendance(me.role) ? db.from("attendance").select("status").eq("day", t) : Promise.resolve({ data: null }),
     can.finance(me.role) ? db.from("work_order_costs").select("price, paid, currency") : Promise.resolve({ data: null }),
+    can.docs(me.role)
+      ? db.from("documents").select("status, due_date, expires_on").neq("status", "archived")
+          .or(`status.eq.pending,expires_on.lte.${addDays(t, 30)}`)
+      : Promise.resolve({ data: null }),
   ]);
+  const docsPending = (docs.data ?? []).filter((d) => d.status === "pending").length;
+  const docsExpiring = (docs.data ?? []).filter((d) => d.expires_on && d.expires_on <= addDays(t, 30)).length;
   const o = orders ?? [];
   const late = o.filter((x) => x.due_date && x.due_date < t && !["done"].includes(x.status));
   const active = o.filter((x) => x.status === "in_progress");
@@ -45,6 +51,8 @@ export default async function Dashboard({ searchParams }: PageProps) {
         {kpi(maint?.length ?? 0, "صيانات مفتوحة", "/maintenance", maint?.length ? "tone-warn" : "")}
         {att.data && kpi(present, "عمال حاضرون اليوم", "/workers", present ? "tone-ok" : "")}
         {fin.data && kpi(money(debtIqd), "ديون عند الزبائن", "/orders", debtIqd ? "tone-warn" : "")}
+        {docs.data && kpi(docsPending, "كتب بانتظار إجراء", "/documents?status=pending", docsPending ? "tone-warn" : "")}
+        {docs.data && docsExpiring > 0 && kpi(docsExpiring, "عقود ومستندات تنتهي خلال شهر", "/documents", "tone-bad")}
         {fin.data && debtUsd > 0 && kpi(money(debtUsd, "USD"), "ديون بالدولار", "/orders", "tone-warn")}
       </div>
 
