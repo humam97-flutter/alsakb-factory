@@ -6,7 +6,9 @@ import { money, num, ORDER_STATUS, PRIORITY, STAGE_STATUS, today } from "@/lib/l
 import { supabase } from "@/lib/supabase/server";
 import { addStage, deleteStage, setStage } from "../actions";
 import { invoiceFrom } from "../../sales/actions";
+import { setStageWork } from "../../production/actions";
 import { OrderFiles } from "./files";
+import { OrderQuality } from "./quality";
 import { waLink } from "@/lib/share";
 
 export default async function OrderPage({ params, searchParams }: IdPageProps) {
@@ -14,13 +16,15 @@ export default async function OrderPage({ params, searchParams }: IdPageProps) {
   const { error } = await searchParams;
   const me = await getMe();
   const db = await supabase();
-  const [{ data: o }, { data: stages }, { data: moves }, { data: cost }, { data: machines }] = await Promise.all([
+  const [{ data: o }, { data: stages }, { data: moves }, { data: cost }, { data: machines }, { data: workers }] = await Promise.all([
     db.from("work_orders").select("*, owner:workers(full_name)").eq("id", id).maybeSingle(),
     db.from("work_order_stages").select("*, machine:machines(name)").eq("order_id", id).order("position"),
     db.from("stock_moves").select("id, day, qty, unit_price, material:materials(name, unit, currency)").eq("order_id", id).eq("kind", "issue").order("day"),
     db.from("work_order_costs").select("*").eq("order_id", id).maybeSingle(),
     db.from("machines").select("id, code, name"),
+    db.from("workers").select("id, full_name").eq("active", true).order("full_name"),
   ]);
+  const wName = new Map((workers ?? []).map((w) => [w.id, w.full_name]));
   if (!o) notFound();
   const mName = new Map((machines ?? []).map((m) => [m.id, m.name]));
   const late = o.due_date && o.due_date < today() && !["done", "delivered", "cancelled"].includes(o.status);
@@ -113,6 +117,21 @@ export default async function OrderPage({ params, searchParams }: IdPageProps) {
               </span>
               {s.done_at && <span className="meta num">{new Date(s.done_at).toLocaleDateString("en-CA")}</span>}
               {can.stages(me.role) ? (
+                <form action={setStageWork} className="row" style={{ gap: 4 }}>
+                  <input type="hidden" name="order_id" value={o.id} />
+                  <input type="hidden" name="stage_id" value={s.id} />
+                  <input type="hidden" name="machine_id" value={s.machine_id ?? ""} />
+                  <select name="worker_id" defaultValue={s.worker_id ?? ""} aria-label={`منفذ ${s.name}`} style={{ width: 120 }}>
+                    <option value="">المنفذ</option>
+                    {(workers ?? []).map((w) => <option key={w.id} value={w.id}>{w.full_name}</option>)}
+                  </select>
+                  <input name="hours" type="number" step="0.25" min="0" defaultValue={s.hours ?? ""} placeholder="ساعات" aria-label={`ساعات ${s.name}`} style={{ width: 80 }} />
+                  <button className="btn ghost sm" type="submit">حفظ</button>
+                </form>
+              ) : (
+                (s.hours || s.worker_id) && <span className="meta">{s.worker_id ? wName.get(s.worker_id) : ""}{s.hours ? ` · ${s.hours} ساعة` : ""}</span>
+              )}
+              {can.stages(me.role) ? (
                 <form action={setStage} className="seg" role="group" aria-label={`حالة ${s.name}`}>
                   <input type="hidden" name="order_id" value={o.id} />
                   <input type="hidden" name="stage_id" value={s.id} />
@@ -156,6 +175,8 @@ export default async function OrderPage({ params, searchParams }: IdPageProps) {
         )}
       </div>
 
+      <OrderQuality orderId={o.id} role={me.role} machines={machines ?? []} />
+
       <h3 className="sec">المواد المصروفة</h3>
       {moves?.length ? (
         <div className="tbl">
@@ -198,7 +219,8 @@ export default async function OrderPage({ params, searchParams }: IdPageProps) {
                 <tbody>
                   <tr><td>مواد مصروفة من المخزن</td><td className="n num">{money(cost.cost_material, cur)}</td></tr>
                   <tr><td>أجور العمال</td><td className="n num">{money(cost.cost_labor, cur)}</td></tr>
-                  <tr><td>كهرباء وتشغيل المكائن</td><td className="n num">{money(cost.cost_machine, cur)}</td></tr>
+                  <tr><td>ساعات المكائن × كلفة الساعة</td><td className="n num">{money(cost.cost_machine_hours, cur)}</td></tr>
+                  <tr><td>كهرباء وتشغيل (يدوي)</td><td className="n num">{money(cost.cost_machine, cur)}</td></tr>
                   <tr><td>كلف أخرى</td><td className="n num">{money(cost.cost_other, cur)}</td></tr>
                   <tr><td><b>مجموع الكلفة</b></td><td className="n num"><b>{money(cost.cost_total, cur)}</b></td></tr>
                   <tr><td>سعر البيع</td><td className="n num">{money(cost.price, cur)}</td></tr>

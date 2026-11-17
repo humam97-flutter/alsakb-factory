@@ -9,7 +9,7 @@ export default async function Dashboard({ searchParams }: PageProps) {
   const me = await getMe();
   const db = await supabase();
   const t = today();
-  const [{ data: orders }, { data: machines }, { data: materials }, { data: maint }, att, fin, docs, reqs, sup] = await Promise.all([
+  const [{ data: orders }, { data: machines }, { data: materials }, { data: maint }, att, fin, docs, reqs, sup, plans] = await Promise.all([
     db.from("work_orders").select("id, no, product, client, status, due_date").not("status", "in", "(delivered,cancelled)"),
     db.from("machines").select("id, code, name, status, next_service"),
     db.from("materials").select("id, name, qty, min_qty, unit, unit_price, currency"),
@@ -22,6 +22,7 @@ export default async function Dashboard({ searchParams }: PageProps) {
       : Promise.resolve({ data: null }),
     can.finance(me.role) ? db.from("purchase_requests").select("id").eq("status", "pending") : Promise.resolve({ data: null }),
     can.finance(me.role) ? db.from("supplier_balances").select("balance, currency") : Promise.resolve({ data: null }),
+    db.from("maintenance_plans").select("id").eq("active", true).lte("next_due", t),
   ]);
   const oweIqd = (sup.data ?? []).filter((x) => x.currency === "IQD").reduce((a, x) => a + Math.max(0, Number(x.balance)), 0);
   const docsPending = (docs.data ?? []).filter((d) => d.status === "pending").length;
@@ -53,6 +54,7 @@ export default async function Dashboard({ searchParams }: PageProps) {
         {kpi(down.length, "مكائن عاطلة أو بالصيانة", "/machines", down.length ? "tone-bad" : "")}
         {kpi(low.length, "مواد تحت حد الطلب", "/stock", low.length ? "tone-bad" : "")}
         {kpi(maint?.length ?? 0, "صيانات مفتوحة", "/maintenance", maint?.length ? "tone-warn" : "")}
+        {(plans.data?.length ?? 0) > 0 && kpi(plans.data!.length, "صيانة دورية حان موعدها", "/maintenance", "tone-bad")}
         {att.data && kpi(present, "عمال حاضرون اليوم", "/workers", present ? "tone-ok" : "")}
         {fin.data && kpi(money(debtIqd), "ديون عند الزبائن", "/sales/customers?debt=1", debtIqd ? "tone-warn" : "")}
         {docs.data && kpi(docsPending, "كتب بانتظار إجراء", "/documents?status=pending", docsPending ? "tone-warn" : "")}
