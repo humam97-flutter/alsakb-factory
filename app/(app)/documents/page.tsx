@@ -58,6 +58,7 @@ export default async function DocumentsPage({ searchParams }: PageProps) {
         </select>
         <button className="btn ghost" type="submit">عرض</button>
         <Link className="btn" href={`/documents/new${kind ? "?kind=" + kind : ""}`}>+ مستند</Link>
+        <a className="btn ghost sm" href="/export/documents">Excel</a>
       </form>
 
       <nav className="seg" aria-label="النوع" style={{ marginBottom: 12 }}>

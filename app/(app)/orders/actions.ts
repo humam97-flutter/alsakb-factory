@@ -101,3 +101,31 @@ export async function deleteStage(form: FormData) {
   if (error) fail(`/orders/${orderId}`, dbError(error));
   revalidatePath(`/orders/${orderId}`);
 }
+
+// ---------- مرفقات الأمر ----------
+export async function addOrderFiles(orderId: string, files: { path: string; name: string; size: number; mime: string }[]) {
+  const db = await supabase();
+  const { error } = await db
+    .from("order_files")
+    .insert(files.map((f) => ({ order_id: orderId, path: f.path, name: f.name, size: f.size, mime: f.mime || null })));
+  if (error) {
+    await db.storage.from("orders").remove(files.map((f) => f.path));
+    return { error: dbError(error) };
+  }
+  revalidatePath(`/orders/${orderId}`);
+  return { error: null };
+}
+
+export async function deleteOrderFile(form: FormData) {
+  const db = await supabase();
+  const id = str(form, "id")!;
+  const orderId = str(form, "order_id")!;
+  const { data: f } = await db.from("order_files").select("path").eq("id", id).maybeSingle();
+  if (f) {
+    const { error: se } = await db.storage.from("orders").remove([f.path]);
+    if (se) fail(`/orders/${orderId}`, "تعذر حذف الملف: " + se.message);
+    const { error } = await db.from("order_files").delete().eq("id", id);
+    if (error) fail(`/orders/${orderId}`, dbError(error));
+  }
+  revalidatePath(`/orders/${orderId}`);
+}

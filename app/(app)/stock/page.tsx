@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Alert, Pill, type PageProps } from "@/components/ui";
 import { can, getMe } from "@/lib/auth";
 import { money, MOVE, num } from "@/lib/labels";
+import { waLink } from "@/lib/share";
 import { supabase } from "@/lib/supabase/server";
 import { deleteMove } from "./actions";
 
@@ -36,6 +37,22 @@ export default async function StockPage({ searchParams }: PageProps) {
             <Link className="btn ghost" href="/stock/move?kind=adjust">جرد</Link>
             <Link className="btn" href="/stock/new">+ مادة</Link>
           </>
+        )}
+        <a className="btn ghost sm" href="/export/stock">Excel</a>
+        <a className="btn ghost sm" href="/export/moves">Excel الحركات</a>
+        {sorted.some(low) && (
+          <a
+            className="btn ghost sm"
+            target="_blank"
+            rel="noopener"
+            href={waLink(
+              null,
+              "معمل السكب الحديدي: مواد تحت حد الطلب\n" +
+                sorted.filter(low).map((m) => `- ${m.name}${m.spec ? " " + m.spec : ""}: باقي ${num(m.qty)} ${m.unit}`).join("\n"),
+            )}
+          >
+            إرسال النواقص بالواتساب
+          </a>
         )}
       </form>
       {!sorted.length ? (

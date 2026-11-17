@@ -25,6 +25,7 @@ export default async function PayrollPage({ searchParams }: PageProps) {
         <h2>الرواتب</h2>
         <input type="month" name="month" defaultValue={month} aria-label="الشهر" style={{ maxWidth: 180 }} />
         <button className="btn ghost sm" type="submit">عرض</button>
+        <a className="btn ghost sm" href={`/export/payroll?month=${month}`}>Excel</a>
       </form>
       {!rows?.length ? (
         <div className="empty">لا يوجد حضور أو دفعات لهذا الشهر. سجّل الحضور يومياً من صفحة العمال.</div>

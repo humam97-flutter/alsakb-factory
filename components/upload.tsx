@@ -3,10 +3,19 @@
 import { createBrowserClient } from "@supabase/ssr";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { addFiles } from "../actions";
 
 // الملف يترفع من المتصفح مباشرة إلى Supabase، فما يتقيد بحد حجم الطلبات بـ Vercel
-export function Upload({ documentId }: { documentId: string }) {
+export type UploadedFile = { path: string; name: string; size: number; mime: string };
+
+export function Upload({
+  bucket,
+  folder,
+  save,
+}: {
+  bucket: string;
+  folder: string;
+  save: (files: UploadedFile[]) => Promise<{ error: string | null }>;
+}) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState("");
@@ -17,7 +26,7 @@ export function Upload({ documentId }: { documentId: string }) {
     if (!list.length) return;
     setError("");
     const db = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-    const done: { path: string; name: string; size: number; mime: string }[] = [];
+    const done: UploadedFile[] = [];
     for (const [i, f] of list.entries()) {
       if (f.size > 50 * 1024 * 1024) {
         setError(`الملف ${f.name} أكبر من 50 ميغا.`);
@@ -25,8 +34,8 @@ export function Upload({ documentId }: { documentId: string }) {
       }
       setBusy(`جاري رفع ${i + 1} من ${list.length}: ${f.name}`);
       const ext = (f.name.split(".").pop() ?? "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8);
-      const path = `${documentId}/${crypto.randomUUID()}${ext ? "." + ext : ""}`;
-      const { error } = await db.storage.from("documents").upload(path, f, { contentType: f.type || undefined });
+      const path = `${folder}/${crypto.randomUUID()}${ext ? "." + ext : ""}`;
+      const { error } = await db.storage.from(bucket).upload(path, f, { contentType: f.type || undefined });
       if (error) {
         setError(`تعذر رفع ${f.name}: ${error.message}`);
         continue;
@@ -35,7 +44,7 @@ export function Upload({ documentId }: { documentId: string }) {
     }
     if (done.length) {
       setBusy("جاري الحفظ…");
-      const res = await addFiles(documentId, done);
+      const res = await save(done);
       if (res.error) setError(res.error);
     }
     setBusy("");
@@ -51,7 +60,7 @@ export function Upload({ documentId }: { documentId: string }) {
           ref={input}
           type="file"
           multiple
-          accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
+          accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.dwg,.dxf"
           onChange={onChange}
           disabled={!!busy}
           style={{ display: "none" }}
