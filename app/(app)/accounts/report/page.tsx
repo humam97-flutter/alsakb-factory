@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PrintButton } from "@/components/print-button";
 import { type PageProps } from "@/components/ui";
 import { money, num, today } from "@/lib/labels";
 import { supabase } from "@/lib/supabase/server";
@@ -72,6 +73,7 @@ export default async function ReportPage({ searchParams }: PageProps) {
         <h2>التقرير الشهري</h2>
         <input type="month" name="month" defaultValue={month} aria-label="الشهر" style={{ maxWidth: 180 }} />
         <button className="btn ghost sm" type="submit">عرض</button>
+        <PrintButton />
       </form>
 
       <div className="kpis">

@@ -13,7 +13,7 @@ const asNum = (s: string) => {
 };
 
 function enhanceTable(table: HTMLTableElement) {
-  if (table.dataset.enh) return;
+  if (table.dataset.enh || table.closest(".paper, [data-plain]")) return;
   table.dataset.enh = "1";
   const body = table.tBodies[0];
   if (!body) return;

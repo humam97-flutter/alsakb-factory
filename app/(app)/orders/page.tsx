@@ -1,3 +1,4 @@
+import { cut, Pager, paging } from "@/components/pager";
 import Link from "next/link";
 import { Alert, Pill, type PageProps } from "@/components/ui";
 import { can, getMe } from "@/lib/auth";
@@ -5,18 +6,21 @@ import { num, ORDER_STATUS, PRIORITY, today } from "@/lib/labels";
 import { supabase } from "@/lib/supabase/server";
 
 export default async function OrdersPage({ searchParams }: PageProps) {
-  const { status, q, error } = await searchParams;
+  const __sp = await searchParams;
+  const { status, q, error } = __sp;
+  const pg = paging(__sp);
   const me = await getMe();
   const db = await supabase();
   let query = db
     .from("work_orders")
     .select("id, no, client, product, qty, unit, status, priority, due_date, machines, owner:workers(full_name), stages:work_order_stages(status)")
     .order("due_date", { ascending: true, nullsFirst: false })
-    .limit(300);
+    .range(pg.from, pg.to);
   if (status) query = query.eq("status", status);
   else query = query.not("status", "in", "(delivered,cancelled)");
   if (q) query = query.or(`product.ilike.%${q}%,client.ilike.%${q}%`);
-  const { data: orders } = await query;
+  const { data: ordersAll } = await query;
+  const { rows: orders, more } = cut(ordersAll);
   const t = today();
 
   return (
@@ -89,6 +93,7 @@ export default async function OrdersPage({ searchParams }: PageProps) {
           })}
         </div>
       )}
+      <Pager page={pg.page} more={more} sp={__sp} path="/orders" />
     </>
   );
 }

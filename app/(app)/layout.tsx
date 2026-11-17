@@ -3,7 +3,9 @@ import { Suspense } from "react";
 import { Enhance } from "@/components/enhance";
 import { Icon } from "@/components/icons";
 import { PageTitle, Sidebar, type NavGroup } from "@/components/nav";
+import { Mark } from "@/components/letterhead";
 import { getAlerts } from "@/lib/alerts";
+import { getBrand } from "@/lib/brand";
 import { can, getMe } from "@/lib/auth";
 import { ROLE } from "@/lib/labels";
 import { signOut } from "../login/actions";
@@ -11,7 +13,7 @@ import { signOut } from "../login/actions";
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const me = await getMe();
   const r = me.role;
-  const alerts = await getAlerts(me);
+  const [alerts, brand] = await Promise.all([getAlerts(me), getBrand()]);
   const bad = alerts.filter((a) => a.level === "bad").length;
   const groups: NavGroup[] = [
     { items: [{ href: "/", label: "اللوحة الرئيسية", icon: "home" }] },
@@ -54,9 +56,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         groups={groups}
         brand={
           <Link href="/" className="brand-link">
-            <span className="logo" aria-hidden="true" />
+            <Mark logo={brand.logo} />
             <span>
-              <b>معمل السكب الحديدي</b>
+              <b>{brand.name}</b>
               <small>نظام إدارة المعمل</small>
             </span>
           </Link>

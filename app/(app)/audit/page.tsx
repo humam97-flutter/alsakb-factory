@@ -1,3 +1,4 @@
+import { cut, Pager, paging } from "@/components/pager";
 import Link from "next/link";
 import { Alert, type PageProps } from "@/components/ui";
 import { can, requireRole } from "@/lib/auth";
@@ -43,11 +44,14 @@ function summary(action: string, changes: Record<string, unknown>) {
 
 export default async function AuditPage({ searchParams }: PageProps) {
   await requireRole(can.users);
-  const { table, error } = await searchParams;
+  const __sp = await searchParams;
+  const { table, error } = __sp;
+  const pg = paging(__sp);
   const db = await supabase();
-  let q = db.from("audit_log").select("*").order("at", { ascending: false }).limit(300);
+  let q = db.from("audit_log").select("*").order("at", { ascending: false }).range(pg.from, pg.to);
   if (table) q = q.eq("table_name", table);
-  const [{ data: rows }, { data: people }] = await Promise.all([q, db.from("profiles").select("id, full_name")]);
+  const [{ data: rowsAll }, { data: people }] = await Promise.all([q, db.from("profiles").select("id, full_name")]);
+  const { rows: rows, more } = cut(rowsAll);
   const who = new Map((people ?? []).map((p) => [p.id, p.full_name]));
 
   return (
@@ -86,6 +90,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
           </table>
         </div>
       )}
+      <Pager page={pg.page} more={more} sp={__sp} path="/audit" />
     </>
   );
 }

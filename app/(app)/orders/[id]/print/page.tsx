@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
+import { Letterhead, Signatures } from "@/components/letterhead";
 import { PrintButton } from "@/components/print-button";
+import { getBrand } from "@/lib/brand";
 import type { IdPageProps } from "@/components/ui";
 import { num, PRIORITY, today } from "@/lib/labels";
 import { qrSvg, siteUrl } from "@/lib/qr";
@@ -15,6 +17,7 @@ export default async function PrintOrderPage({ params }: IdPageProps) {
     db.from("machines").select("id, name"),
   ]);
   if (!o) notFound();
+  const brand = await getBrand();
   const qr = await qrSvg(await siteUrl(`/orders/${o.id}`));
   const mName = new Map((machines ?? []).map((m) => [m.id, m.name]));
   const rows: [string, string | null][] = [
@@ -28,44 +31,36 @@ export default async function PrintOrderPage({ params }: IdPageProps) {
     ["المكائن", (o.machines as string[]).map((m) => mName.get(m)).filter(Boolean).join("، ")],
   ];
   return (
-    <div style={{ background: "#fff", color: "#000", padding: 24, borderRadius: 8 }}>
-      <div className="noprint actions" style={{ marginTop: 0, marginBottom: 16 }}>
+    <div className="paper">
+      <div className="noprint actions" style={{ marginTop: 0, marginBottom: 16, paddingTop: 0, borderTop: 0 }}>
         <PrintButton />
       </div>
-      <div className="row between" style={{ borderBottom: "3px solid #000", paddingBottom: 8, marginBottom: 16 }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 22 }}>أمر عمل #{o.no}</h2>
-          <div>معمل السكب الحديدي</div>
-        </div>
-        <div className="row" style={{ gap: 12 }}>
-          <div style={{ fontSize: 12, textAlign: "center" }}>
-            <div style={{ width: 84, height: 84 }} dangerouslySetInnerHTML={{ __html: qr }} />
-            صوّره لتحديث المراحل
-          </div>
-          <div>تاريخ الطباعة: {today()}</div>
-        </div>
+      <Letterhead brand={brand} title={`أمر عمل #${o.no}`} info={[["تاريخ الطباعة", today()]]} />
+      <div style={{ float: "left", marginInlineStart: 16, fontSize: 11, textAlign: "center", color: "#444" }}>
+        <div style={{ width: 92, height: 92 }} dangerouslySetInnerHTML={{ __html: qr }} />
+        صوّره لتحديث المراحل
       </div>
-      <table style={{ border: "1px solid #999" }}>
+      <table style={{ width: "auto", minWidth: "60%" }}>
         <tbody>
           {rows
             .filter(([, v]) => v)
             .map(([l, v]) => (
               <tr key={l}>
-                <th style={{ width: "28%", background: "#eee", color: "#000", fontSize: 14 }}>{l}</th>
+                <th style={{ width: "28%", fontSize: 13.5 }}>{l}</th>
                 <td style={{ whiteSpace: "normal" }}>{v}</td>
               </tr>
             ))}
         </tbody>
       </table>
       <h3 style={{ marginBottom: 6 }}>المراحل</h3>
-      <table style={{ border: "1px solid #999" }}>
+      <table style={{ width: "auto", minWidth: "60%" }}>
         <thead>
           <tr>
-            <th style={{ color: "#000" }}>#</th>
-            <th style={{ color: "#000" }}>المرحلة</th>
-            <th style={{ color: "#000" }}>الماكنة</th>
-            <th style={{ color: "#000" }}>المنفذ</th>
-            <th style={{ color: "#000" }}>التاريخ</th>
+            <th>#</th>
+            <th>المرحلة</th>
+            <th>الماكنة</th>
+            <th>المنفذ</th>
+            <th>التاريخ</th>
           </tr>
         </thead>
         <tbody>
@@ -85,13 +80,7 @@ export default async function PrintOrderPage({ params }: IdPageProps) {
         {"\n"}
         {o.notes}
       </div>
-      <div className="row" style={{ marginTop: 48, gap: 24 }}>
-        {["المسؤول", "مدير الإنتاج", "فحص الجودة"].map((s) => (
-          <div key={s} style={{ flex: 1, borderTop: "1px solid #000", paddingTop: 6, textAlign: "center" }}>
-            {s}
-          </div>
-        ))}
-      </div>
+      <Signatures names={["المسؤول", "مدير الإنتاج", "فحص الجودة"]} />
     </div>
   );
 }

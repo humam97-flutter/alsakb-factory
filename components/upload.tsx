@@ -11,10 +11,16 @@ export function Upload({
   bucket,
   folder,
   save,
+  label = "+ رفع ملف أو صورة",
+  accept = "image/*,application/pdf,.doc,.docx,.xls,.xlsx,.dwg,.dxf",
+  single = false,
 }: {
   bucket: string;
   folder: string;
   save: (files: UploadedFile[]) => Promise<{ error: string | null }>;
+  label?: string;
+  accept?: string;
+  single?: boolean;
 }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
@@ -55,21 +61,23 @@ export function Upload({
   return (
     <div className="row">
       <label className="btn" style={{ cursor: busy ? "wait" : "pointer" }}>
-        + رفع ملف أو صورة
+        {label}
         <input
           ref={input}
           type="file"
-          multiple
-          accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.dwg,.dxf"
+          multiple={!single}
+          accept={accept}
           onChange={onChange}
           disabled={!!busy}
           style={{ display: "none" }}
         />
       </label>
-      <label className="btn ghost" style={{ cursor: busy ? "wait" : "pointer" }}>
-        تصوير بالكاميرا
-        <input type="file" accept="image/*" capture="environment" onChange={onChange} disabled={!!busy} style={{ display: "none" }} />
-      </label>
+      {!single && (
+        <label className="btn ghost" style={{ cursor: busy ? "wait" : "pointer" }}>
+          تصوير بالكاميرا
+          <input type="file" accept="image/*" capture="environment" onChange={onChange} disabled={!!busy} style={{ display: "none" }} />
+        </label>
+      )}
       {busy && <span className="meta" role="status">{busy}</span>}
       {error && <span className="tone-bad" role="alert" style={{ fontSize: 13 }}>{error}</span>}
     </div>

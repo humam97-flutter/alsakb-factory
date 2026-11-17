@@ -1,4 +1,5 @@
 import type { Tone } from "@/lib/labels";
+import { Toast } from "./toast";
 
 type Opt = { label: string; tone: Tone };
 
@@ -9,7 +10,7 @@ export function Pill({ map, value }: { map: Record<string, Opt>; value: string |
 
 export function Alert({ error, ok }: { error?: string; ok?: string }) {
   if (error) return <div className="alert" role="alert">{error}</div>;
-  if (ok) return <div className="alert ok" role="status">{ok}</div>;
+  if (ok) return <Toast msg={ok} />;
   return null;
 }
 

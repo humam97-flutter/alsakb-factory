@@ -255,9 +255,30 @@ export async function saveSettings(form: FormData) {
       invoice_footer: str(form, "invoice_footer"),
       usd_rate: numOrNull(form, "usd_rate") ?? 1500,
       ...(form.has("shift_hours") ? { shift_hours: numOrNull(form, "shift_hours") ?? 8 } : {}),
+      ...(form.has("manager_name") ? { email: str(form, "email"), reg_no: str(form, "reg_no"), manager_name: str(form, "manager_name") } : {}),
     })
     .eq("id", 1);
   if (error) fail("/settings", dbError(error));
   revalidatePath("/", "layout");
   redirect("/settings?ok=" + encodeURIComponent("انحفظت الإعدادات."));
+}
+
+// شعار المعمل: ملف واحد بحاوية branding، ونحذف القديم
+export async function saveLogo(files: { path: string }[]): Promise<{ error: string | null }> {
+  const db = await supabase();
+  const { data: old } = await db.from("settings").select("logo_path").eq("id", 1).maybeSingle();
+  const { error } = await db.from("settings").update({ logo_path: files[0]?.path ?? null }).eq("id", 1);
+  if (error) return { error: dbError(error) };
+  if (old?.logo_path && old.logo_path !== files[0]?.path) await db.storage.from("branding").remove([old.logo_path]);
+  revalidatePath("/", "layout");
+  return { error: null };
+}
+
+export async function removeLogo() {
+  const db = await supabase();
+  const { data: old } = await db.from("settings").select("logo_path").eq("id", 1).maybeSingle();
+  await db.from("settings").update({ logo_path: null }).eq("id", 1);
+  if (old?.logo_path) await db.storage.from("branding").remove([old.logo_path]);
+  revalidatePath("/", "layout");
+  redirect("/settings?ok=" + encodeURIComponent("انشال الشعار."));
 }

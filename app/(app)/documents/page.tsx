@@ -1,3 +1,4 @@
+import { cut, Pager, paging } from "@/components/pager";
 import Link from "next/link";
 import { Alert, Pill, type PageProps } from "@/components/ui";
 import { can, requireRole } from "@/lib/auth";
@@ -6,7 +7,9 @@ import { supabase } from "@/lib/supabase/server";
 
 export default async function DocumentsPage({ searchParams }: PageProps) {
   await requireRole(can.docs);
-  const { kind, status, q, error } = await searchParams;
+  const __sp = await searchParams;
+  const { kind, status, q, error } = __sp;
+  const pg = paging(__sp);
   const db = await supabase();
   const t = today();
   const soon = addDays(t, 30);
@@ -16,14 +19,14 @@ export default async function DocumentsPage({ searchParams }: PageProps) {
     .select("id, kind, ref_no, doc_date, subject, party, status, due_date, expires_on, files:document_files(count)")
     .order("doc_date", { ascending: false })
     .order("serial", { ascending: false })
-    .limit(300);
+    .range(pg.from, pg.to);
   if (kind) query = query.eq("kind", kind);
   if (status) query = query.eq("status", status);
   else query = query.neq("status", "archived");
   const term = (q ?? "").replace(/[,()%*\\]/g, " ").trim();
   if (term) query = query.or(`subject.ilike.%${term}%,party.ilike.%${term}%,ref_no.ilike.%${term}%,summary.ilike.%${term}%`);
 
-  const [{ data: docs }, { data: attention }] = await Promise.all([
+  const [{ data: docsAll }, { data: attention }] = await Promise.all([
     query,
     db
       .from("documents")
@@ -32,6 +35,7 @@ export default async function DocumentsPage({ searchParams }: PageProps) {
       .or(`and(status.eq.pending,due_date.lte.${soon}),expires_on.lte.${soon}`)
       .order("due_date", { ascending: true, nullsFirst: false }),
   ]);
+  const { rows: docs, more } = cut(docsAll);
 
   const tabs = [["", "الكل"], ...Object.entries(DOC_KIND).map(([k, v]) => [k, v.label])];
   const href = (k: string) => {
@@ -119,6 +123,7 @@ export default async function DocumentsPage({ searchParams }: PageProps) {
           </table>
         </div>
       )}
+      <Pager page={pg.page} more={more} sp={__sp} path="/documents" />
     </>
   );
 }
