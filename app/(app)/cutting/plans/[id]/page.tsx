@@ -6,6 +6,7 @@ import { NestSvg, YieldBar } from "@/components/nest-svg";
 import { can, getMe } from "@/lib/auth";
 import { getCutSettings } from "@/lib/cutting";
 import { money, num } from "@/lib/labels";
+import { partKeys } from "@/lib/dxf";
 import type { Placed, Rect } from "@/lib/nesting";
 import { supabase } from "@/lib/supabase/server";
 import { cancelPlan, finishCut } from "../../actions";
@@ -30,11 +31,12 @@ export default async function PlanPage({ params, searchParams }: IdPageProps) {
   const edit = can.production(me.role);
   const y = Number(c.plate_kg) ? (Number(c.parts_kg) / Number(c.plate_kg)) * 100 : 0;
   // جدول القطع: الاسم، القياس، العدد
-  const parts = new Map<string, { name: string; size: string; n: number }>();
+  const keys = partKeys(placed);
+  const parts = new Map<string, { key: string; name: string; size: string; n: number }>();
   for (const x of placed) {
     const size = x.shape === "rect" ? `${Math.round(Math.max(x.w, x.h))}×${Math.round(Math.min(x.w, x.h))}` : x.inner ? `Ø${x.d} / Ø${x.inner}` : `Ø${x.d}`;
     const k = `${x.part_id}`;
-    const e = parts.get(k) ?? { name: x.name, size, n: 0 };
+    const e = parts.get(k) ?? { key: keys.get(x.part_id) ?? "", name: x.name, size, n: 0 };
     e.n++;
     parts.set(k, e);
   }
@@ -49,6 +51,8 @@ export default async function PlanPage({ params, searchParams }: IdPageProps) {
       <div className="actions noprint" style={{ marginTop: 0, marginBottom: 14 }}>
         <Link className="btn ghost" href={`/orders/${o.id}`}>أمر العمل #{o.no}</Link>
         <Link className="btn ghost" href={`/cutting/plans?order=${o.id}`}>كل مخططات الأمر</Link>
+        <a className="btn ghost" href={`/cutting/plans/${c.id}/dxf`} download>تنزيل DXF للـ CNC</a>
+        <a className="btn ghost" href={`/cutting/plans/${c.id}/dxf?remnants=1`} download>DXF مع البقايا</a>
         <PrintButton />
       </div>
 
@@ -72,10 +76,10 @@ export default async function PlanPage({ params, searchParams }: IdPageProps) {
 
       <div className="tbl">
         <table data-plain>
-          <thead><tr><th>القطعة</th><th className="n">القياس (ملم)</th><th className="n">العدد على هذا اللوح</th></tr></thead>
+          <thead><tr><th>الرمز</th><th>القطعة</th><th className="n">القياس (ملم)</th><th className="n">العدد على هذا اللوح</th></tr></thead>
           <tbody>
             {[...parts.values()].map((x, i) => (
-              <tr key={i}><td>{x.name}</td><td className="n num"><bdi className="ltr">{x.size}</bdi></td><td className="n num">{x.n}</td></tr>
+              <tr key={i}><td className="num">{x.key}</td><td>{x.name}</td><td className="n num"><bdi className="ltr">{x.size}</bdi></td><td className="n num">{x.n}</td></tr>
             ))}
           </tbody>
         </table>

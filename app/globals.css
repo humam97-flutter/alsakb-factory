@@ -352,3 +352,28 @@ details > summary.btn::-webkit-details-marker { display: none; }
 .fc-btns { display: flex; gap: 8px; margin-top: 6px; }
 .fc-btns form { flex: 1; }
 .fc-btns .btn { width: 100%; min-height: 52px; font-size: 17px; justify-content: center; }
+
+/* المساعد الذكي */
+.chat { display: flex; flex-direction: column; gap: 12px; }
+.chat-log { display: flex; flex-direction: column; gap: 10px; min-height: 320px; max-height: calc(100dvh - 300px); overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; box-shadow: var(--shadow); }
+.chat-msg { max-width: min(760px, 88%); padding: 10px 14px; border-radius: 12px; line-height: 1.75; font-size: 14.5px; overflow-wrap: anywhere; }
+.chat-msg.user { align-self: flex-start; background: var(--primary); color: var(--primary-ink); border-end-start-radius: 4px; white-space: pre-wrap; }
+.chat-msg.assistant { align-self: flex-end; background: var(--chip); border-end-end-radius: 4px; }
+.chat-empty { margin: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 20px 0; }
+.chat-empty > b { font-family: var(--f-display); font-size: 17px; }
+.chat-ideas { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px; max-width: 720px; }
+.chat-ideas .btn { white-space: normal; text-align: start; }
+.chat-box { display: flex; gap: 8px; align-items: flex-end; }
+.chat-box textarea { min-height: 44px; max-height: 160px; field-sizing: content; }
+.chat-dots { display: inline-flex; gap: 4px; padding: 4px 0; }
+.chat-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: dots 1.2s infinite ease-in-out; }
+.chat-dots i:nth-child(2) { animation-delay: .15s; }
+.chat-dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes dots { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+@media (max-width: 640px) { .chat-box { flex-wrap: wrap; } .chat-box textarea { flex-basis: 100%; } .chat-msg { max-width: 94%; } }
+.scan-drop { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 30px 16px; border: 2px dashed var(--line); border-radius: var(--r); text-align: center; cursor: pointer; transition: border-color .15s, background .15s; }
+.scan-drop:hover { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 5%, transparent); }
+.scan-drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.scan-drop:focus-within { outline: 2px solid var(--primary); outline-offset: 2px; }
+.offline-bar { position: fixed; inset-inline: 0; bottom: 0; z-index: 90; background: var(--warn); color: #1d1405; text-align: center; font-size: 13.5px; font-weight: 600; padding: 9px 16px calc(9px + env(safe-area-inset-bottom)); }
+@media print { .offline-bar { display: none; } }

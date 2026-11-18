@@ -16,7 +16,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const [alerts, brand] = await Promise.all([getAlerts(me), getBrand()]);
   const bad = alerts.filter((a) => a.level === "bad").length;
   const groups: NavGroup[] = [
-    { items: [{ href: "/", label: "اللوحة الرئيسية", icon: "home" }] },
+    { items: [{ href: "/", label: "اللوحة الرئيسية", icon: "home" }, { href: "/assistant", label: "المساعد الذكي", icon: "spark" }] },
     {
       title: "التشغيل",
       items: [

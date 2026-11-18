@@ -11,6 +11,7 @@ export default async function PurchasesLayout({ children }: { children: React.Re
           items={[
             { href: "/purchases/requests", label: "طلبات الشراء" },
             { href: "/purchases/suppliers", label: "الموردين" },
+            { href: "/purchases/prices", label: "أسعار الحديد" },
             ...(fin
               ? [
                   { href: "/purchases/invoices", label: "فواتير الشراء" },

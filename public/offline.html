@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ماكو إنترنت · معمل السكب الحديدي</title>
+<style>
+  :root { --bg: #eef1f4; --panel: #fff; --ink: #16222f; --muted: #5b6b7b; --primary: #2c4157; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0f171f; --panel: #16222f; --ink: #e8edf2; --muted: #9aabbb; --primary: #8fb3d6; } }
+  body { margin: 0; min-height: 100dvh; display: grid; place-items: center; background: var(--bg); color: var(--ink); font-family: system-ui, "Segoe UI", Tahoma, sans-serif; padding: 16px; }
+  .card { background: var(--panel); border-radius: 14px; padding: 28px 22px; max-width: 420px; text-align: center; box-shadow: 0 4px 18px rgba(0,0,0,.08); }
+  h1 { font-size: 20px; margin: 10px 0 8px; }
+  p { color: var(--muted); line-height: 1.8; margin: 0 0 16px; }
+  button { font: inherit; font-weight: 600; background: var(--primary); color: var(--bg); border: 0; border-radius: 8px; padding: 10px 22px; cursor: pointer; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <img src="/icon.svg" width="56" height="56" alt="">
+    <h1>ماكو إنترنت هسه</h1>
+    <p>هاي الصفحة ما انفتحت قبل على هذا الجهاز. الصفحات اللي فتحتها سابقاً تشتغل بدون إنترنت للقراءة، والحفظ يرجع يشتغل أول ما يرجع الخط.</p>
+    <button onclick="location.reload()">جرّب مرة ثانية</button>
+  </div>
+</body>
+</html>
