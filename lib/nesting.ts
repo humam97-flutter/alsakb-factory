@@ -14,6 +14,7 @@ export type Part = {
   diameter_mm: number | null;
   inner_mm: number | null;
   qty: number;
+  area_mm2?: number | null; // لقطعة من مخطط DXF: المساحة الحقيقية (الشكل يترتب بالمستطيل المحيط)
 };
 export type Plate = {
   id: string;
@@ -51,7 +52,8 @@ export function partBox(p: Part): [number, number] {
 }
 
 // المساحة الحقيقية بالملم²
-export function partArea(p: Pick<Part, "shape" | "length_mm" | "width_mm" | "diameter_mm" | "inner_mm">): number {
+export function partArea(p: Pick<Part, "shape" | "length_mm" | "width_mm" | "diameter_mm" | "inner_mm"> & { area_mm2?: number | null }): number {
+  if (p.area_mm2 && Number(p.area_mm2) > 0) return Number(p.area_mm2);
   if (p.shape === "rect") return Number(p.length_mm) * Number(p.width_mm);
   const d = Number(p.diameter_mm);
   const i = p.shape === "ring" ? Number(p.inner_mm ?? 0) : 0;

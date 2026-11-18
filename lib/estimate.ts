@@ -111,7 +111,7 @@ export type Line = { category: string; description: string; qty: number; unit: s
 const R = (x: number, d = 0) => Math.round(x * 10 ** d) / 10 ** d;
 
 // ساعات العمل حسب المراحل
-function laborLines(type: string, tons: number, rates: Rates, weldHours?: number): Line[] {
+export function laborLines(type: string, tons: number, rates: Rates, weldHours?: number): Line[] {
   const perTon = rates[`hours_${type}` as keyof Rates] ?? rates.hours_other;
   const total = tons * Number(perTon);
   const split = STAGE_SPLIT[type] ?? STAGE_SPLIT.other;

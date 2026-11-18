@@ -1,7 +1,8 @@
+import { placeGeom, svgPath, type Geom } from "@/lib/dxf-import";
 import type { Placed, Rect } from "@/lib/nesting";
 
 // رسم اللوح: القطع، البقايا (مخططة بالأخضر)، والهدر (لون اللوح)
-export function NestSvg({ L, W, placed, remnants, edge = 0, max = 900 }: { L: number; W: number; placed: Placed[]; remnants: Rect[]; edge?: number; max?: number }) {
+export function NestSvg({ L, W, placed, remnants, edge = 0, max = 900, geoms }: { L: number; W: number; placed: Placed[]; remnants: Rect[]; edge?: number; max?: number; geoms?: Record<string, Geom | null | undefined> }) {
   const fs = Math.max(L, W) / 55;
   const ids = [...new Set(placed.map((p) => p.part_id))];
   const tone = (id: string) => `var(--nest-${ids.indexOf(id) % 6})`;
@@ -27,7 +28,9 @@ export function NestSvg({ L, W, placed, remnants, edge = 0, max = 900 }: { L: nu
         return (
           <g key={i} style={{ ["--c" as string]: tone(p.part_id) }}>
             <title>{`${p.name}: ${Math.round(p.w)}×${Math.round(p.h)}${p.rot ? " (مدوّرة)" : ""}`}</title>
-            {p.shape === "rect" ? (
+            {geoms?.[p.part_id] ? (
+              <GeomShape g={placeGeom(geoms[p.part_id]!, p.rot ? p.h : p.w, p.rot, p.x, p.y)} />
+            ) : p.shape === "rect" ? (
               <rect x={p.x} y={p.y} width={p.w} height={p.h} className="nest-part" />
             ) : (
               <>
@@ -45,6 +48,16 @@ export function NestSvg({ L, W, placed, remnants, edge = 0, max = 900 }: { L: nu
       })}
       <text x={L / 2} y={-fs * 0.5} className="nest-dim" fontSize={fs} textAnchor="middle">{L} ملم</text>
     </svg>
+  );
+}
+
+// قطعة بشكل حر من المخطط: الحدود والفتحات
+export function GeomShape({ g }: { g: Geom }) {
+  return (
+    <>
+      <path d={svgPath(g.outer)} className="nest-part" />
+      {g.holes.map((h, i) => (h.kind === "circle" ? <circle key={i} cx={h.cx} cy={h.cy} r={h.r} className="nest-hole" /> : <path key={i} d={svgPath(h.pts)} className="nest-hole" />))}
+    </>
   );
 }
 

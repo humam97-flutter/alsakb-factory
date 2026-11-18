@@ -17,6 +17,7 @@ export default async function ProposalPage({ params, searchParams }: IdPageProps
   const { data: o } = await db.from("work_orders").select("id, no, product").eq("id", id).maybeSingle();
   if (!o) notFound();
   const { layouts, unplaced, remaining, settings: s, drafts, parts } = await proposeForOrder(id);
+  const geoms = Object.fromEntries(parts.filter((x) => x.geometry).map((x) => [x.id, x.geometry]));
   const real = layouts.filter((l) => !l.virtual);
   const buy = layouts.filter((l) => l.virtual);
   const sum = (k: "plate_kg" | "parts_kg" | "remnant_kg" | "scrap_kg", ls = real) => ls.reduce((a, l) => a + l[k], 0);
@@ -92,7 +93,7 @@ export default async function ProposalPage({ params, searchParams }: IdPageProps
                 <span className="meta">{l.plate.grade} · سمك {Number(l.plate.thickness)} ملم · <bdi className="num ltr">{Number(l.plate.length_mm)}×{Number(l.plate.width_mm)}</bdi>{l.plate.location ? ` · ${l.plate.location}` : ""}</span>
                 <span style={{ marginInlineStart: "auto" }} className="num">{(l.yield * 100).toFixed(1)}%</span>
               </div>
-              <NestSvg L={Number(l.plate.length_mm)} W={Number(l.plate.width_mm)} placed={l.placed} remnants={l.remnants} edge={s.edge} />
+              <NestSvg L={Number(l.plate.length_mm)} W={Number(l.plate.width_mm)} placed={l.placed} remnants={l.remnants} edge={s.edge} geoms={geoms} />
               <div className="nest-stats">
                 <span>القطع <b>{l.placed.length}</b></span>
                 <span>اللوح <b>{num(l.plate_kg.toFixed(1))}</b> كغم</span>
