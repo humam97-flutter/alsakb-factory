@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { Pwa } from "@/components/pwa";
 
 export const metadata: Metadata = {
   title: "معمل السكب الحديدي",
@@ -20,7 +21,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Pwa />
+      </body>
     </html>
   );
 }

@@ -6,8 +6,12 @@ import { supabase } from "./supabase/server";
 export type AlertItem = { level: "bad" | "warn"; group: string; text: string; href: string };
 
 // كل التنبيهات اللي تخص المستخدم حسب دوره، بمكان واحد
-export const getAlerts = cache(async (me: Me): Promise<AlertItem[]> => {
-  const db = await supabase();
+type Db = Awaited<ReturnType<typeof supabase>>;
+
+export const getAlerts = cache(async (me: Me): Promise<AlertItem[]> => collectAlerts(await supabase(), me));
+
+// نفس التنبيهات بقاعدة بيانات معينة (التقرير اليومي يستعمل حساب الخدمة)
+export async function collectAlerts(db: Db, me: Pick<Me, "role">): Promise<AlertItem[]> {
   const t = today();
   const r = me.role;
   const out: AlertItem[] = [];
@@ -130,4 +134,4 @@ export const getAlerts = cache(async (me: Me): Promise<AlertItem[]> => {
     for (const [oid, e] of byOrder) out.push({ level: "warn", group: "التخطيط", text: `أمر #${e.no}: متأخر عن الخطة (${e.names.join("، ")})`, href: `/production/plan/${oid}` });
   }
   return out.sort((a, b) => (a.level === b.level ? 0 : a.level === "bad" ? -1 : 1));
-});
+}

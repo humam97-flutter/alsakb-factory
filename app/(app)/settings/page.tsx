@@ -5,12 +5,19 @@ import { Mark } from "@/components/letterhead";
 import { Upload } from "@/components/upload";
 import { logoUrl } from "@/lib/brand";
 import { removeLogo, saveLogo, saveSettings } from "../sales/actions";
+import { saveAiSettings, sendTestReport } from "../assistant/actions";
+import { aiReady } from "@/lib/ai";
+import { dailyReport } from "@/lib/daily-report";
+import { siteUrl } from "@/lib/site";
+import { telegramReady } from "@/lib/telegram";
+import { waLink } from "@/lib/share";
 
 export default async function SettingsPage({ searchParams }: PageProps) {
   await requireRole(can.users);
   const { error, ok } = await searchParams;
   const db = await supabase();
   const { data: s } = await db.from("settings").select("*").eq("id", 1).maybeSingle();
+  const report = await dailyReport(db, siteUrl());
   return (
     <>
       <div className="bar"><h2>إعدادات المعمل</h2></div>
@@ -43,6 +50,25 @@ export default async function SettingsPage({ searchParams }: PageProps) {
           <TextArea name="invoice_footer" label="ملاحظة أسفل الفاتورة وعرض السعر" value={s?.invoice_footer} />
         </div>
         <div className="actions"><button className="btn" type="submit">حفظ</button></div>
+      </form>
+      <h3 className="sec" id="ai">الذكاء الاصطناعي والتقرير اليومي</h3>
+      <form action={saveAiSettings} className="panel">
+        <div className="kv" style={{ marginBottom: 14 }}>
+          <div><span className="meta">مفتاح الذكاء الاصطناعي</span><b className={aiReady() ? "pos" : "neg"}>{aiReady() ? "مضاف ✓" : "غير مضاف"}</b></div>
+          <div><span className="meta">بوت تيليكرام</span><b className={telegramReady() ? "pos" : "neg"}>{telegramReady() ? "مضاف ✓" : "غير مضاف"}</b></div>
+        </div>
+        <div className="fields">
+          <label className="row" style={{ flexDirection: "row", alignItems: "center", gap: 8, color: "var(--ink)" }}><input type="checkbox" name="ai_enabled" defaultChecked={s?.ai_enabled ?? true} /> تشغيل المساعد وقراءة المستندات</label>
+          <Input name="ai_monthly_limit" label="حد الطلبات بالشهر (للتحكم بالكلفة)" value={s?.ai_monthly_limit ?? 2000} type="number" />
+          <Input name="telegram_chat_id" label="رقم محادثة أو مجموعة تيليكرام" value={s?.telegram_chat_id} />
+          <label className="row" style={{ flexDirection: "row", alignItems: "center", gap: 8, color: "var(--ink)" }}><input type="checkbox" name="report_enabled" defaultChecked={s?.report_enabled ?? false} /> إرسال تقرير كل يوم الساعة 7 الصبح</label>
+        </div>
+        <p className="meta">المفاتيح (ANTHROPIC_API_KEY و TELEGRAM_BOT_TOKEN و CRON_SECRET) تنضاف بإعدادات Vercel فقط، ما تنكتب هنا.</p>
+        <div className="actions">
+          <button className="btn" type="submit">حفظ</button>
+          <button className="btn ghost" type="submit" formAction={sendTestReport} disabled={!telegramReady() || !s?.telegram_chat_id}>أرسل تقرير تجربة لتيليكرام</button>
+          <a className="btn ghost" href={waLink(null, report)} target="_blank" rel="noreferrer">أرسل التقرير بواتساب</a>
+        </div>
       </form>
       <h3 className="sec">النسخ الاحتياطي</h3>
       <div className="panel">
