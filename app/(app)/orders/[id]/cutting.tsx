@@ -50,7 +50,7 @@ export async function OrderCutting({ orderId, role }: { orderId: string; role: R
                 {ps.map((p) => (
                   <tr key={p.id}>
                     <td>{p.name}</td>
-                    <td>{SHAPE_LABEL[p.shape]}</td>
+                    <td>{p.geometry ? "شكل حر (DXF)" : SHAPE_LABEL[p.shape]}</td>
                     <td>{p.grade}</td>
                     <td className="n num">{num(p.thickness)}</td>
                     <td className="n num"><bdi className="ltr">{size(p)}</bdi></td>

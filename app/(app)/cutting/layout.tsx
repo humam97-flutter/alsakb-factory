@@ -8,6 +8,7 @@ export default function CuttingLayout({ children }: { children: React.ReactNode 
           items={[
             { href: "/cutting", label: "الألواح" },
             { href: "/cutting/plans", label: "مخططات القص" },
+            { href: "/cutting/import", label: "رفع مخطط تصميم DXF" },
             { href: "/cutting/report", label: "تقرير الهدر والخسارة" },
           ]}
         />

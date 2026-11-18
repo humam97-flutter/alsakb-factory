@@ -7,6 +7,7 @@ import { can, getMe } from "@/lib/auth";
 import { getCutSettings } from "@/lib/cutting";
 import { money, num } from "@/lib/labels";
 import { partKeys } from "@/lib/dxf";
+import type { Geom } from "@/lib/dxf-import";
 import type { Placed, Rect } from "@/lib/nesting";
 import { supabase } from "@/lib/supabase/server";
 import { cancelPlan, finishCut } from "../../actions";
@@ -26,6 +27,8 @@ export default async function PlanPage({ params, searchParams }: IdPageProps) {
   const o = c.order as { id: string; no: number; product: string; client: string | null };
   const p = c.plate as { serial: number; grade: string; thickness: number; length_mm: number; width_mm: number; heat_no: string | null; cert_no: string | null; location: string | null };
   const placed = c.layout as Placed[];
+  const { data: shapes } = await db.from("cut_parts").select("id, geometry").in("id", [...new Set(placed.map((x) => x.part_id))]).not("geometry", "is", null);
+  const geoms = Object.fromEntries((shapes ?? []).map((x) => [x.id, x.geometry as Geom]));
   const rems = c.remnants as Rect[];
   const draft = c.status === "draft";
   const edit = can.production(me.role);
@@ -61,7 +64,7 @@ export default async function PlanPage({ params, searchParams }: IdPageProps) {
           <h3>{p.grade} · سمك {Number(p.thickness)} ملم · <bdi className="num ltr">{Number(p.length_mm)}×{Number(p.width_mm)}</bdi></h3>
           <span className="meta num">{[p.heat_no && `Heat ${p.heat_no}`, p.cert_no && `MTC ${p.cert_no}`, p.location].filter(Boolean).join(" · ")}</span>
         </div>
-        <NestSvg L={Number(p.length_mm)} W={Number(p.width_mm)} placed={placed} remnants={rems} edge={s.edge} />
+        <NestSvg L={Number(p.length_mm)} W={Number(p.width_mm)} placed={placed} remnants={rems} edge={s.edge} geoms={geoms} />
         <div className="nest-stats">
           <span>وزن اللوح <b>{num(c.plate_kg)}</b> كغم</span>
           <span>القطع <b>{num(c.parts_kg)}</b> كغم</span>
